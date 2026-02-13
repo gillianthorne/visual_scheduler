@@ -1,12 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:provider/provider.dart';
 import 'package:visual_scheduler/features/categories/data/category_model.dart';
+import 'package:visual_scheduler/features/categories/data/category_repository.dart';
+import 'package:visual_scheduler/features/categories/logic/category_provider.dart';
 import 'package:visual_scheduler/features/day_profiles/data/day_profile_model.dart';
 import 'package:visual_scheduler/features/day_profiles/data/profile_task_model.dart';
 import 'package:visual_scheduler/features/settings/data/settings_model.dart';
 import 'package:visual_scheduler/features/tasks/data/task_model.dart';
+import 'package:visual_scheduler/features/tasks/data/task_repository.dart';
 import 'package:visual_scheduler/features/templates/data/template_model.dart';
-
+import 'features/tasks/data/task_model.dart';
+import 'features/tasks/logic/task_provider.dart';
+import 'features/tasks/presentation/daily_timeline_screen.dart';
+import 'features/tasks/data/duration_adapter.dart';
 
 // main is asynchronous - when run we make sure it is initialzied then 
 // await before we can run the app
@@ -15,8 +22,7 @@ void main() async {
   // await pauses just this function while these are running, so that the
   // app cannot be run without these two tasks, as that would cause an error
   await Hive.initFlutter();
-  await Hive.openBox("tasks");
-
+  Hive.registerAdapter(DurationAdapter());
   Hive.registerAdapter(ProfileTaskAdapter());
   Hive.registerAdapter(DayProfileAdapter());
   Hive.registerAdapter(TaskAdapter());
@@ -24,50 +30,39 @@ void main() async {
   Hive.registerAdapter(TemplateAdapter());
   Hive.registerAdapter(SettingsAdapter());
 
-  runApp(const VisualSchedulerApp());
+  final taskBox = await Hive.openBox<Task>('tasksBox');
+  final taskRepository = TaskRepository(Hive.box<Task>('tasksBox'));
+
+  await Hive.openBox<Category>('categories');
+  final categoryRepository = CategoryRepository(Hive.box<Category>('categories'));
+
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(
+          create: (_) => TaskProvider(taskRepository),
+        ),
+        ChangeNotifierProvider(
+          create: (_) => CategoryProvider(categoryRepository),
+        ),
+      ],
+      child: VisualSchedulerApp(taskBox: taskBox),
+    ),
+  );
+
+;
 }
 
 class VisualSchedulerApp extends StatelessWidget {
-  const VisualSchedulerApp({super.key});
+  final Box<Task> taskBox;
+  const VisualSchedulerApp({super.key, required this.taskBox});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Visual Scheduler',
-      theme: ThemeData(
-        colorSchemeSeed: Colors.blue,
-        useMaterial3: true,
-      ),
-      home: IncrementButton()
+      home: DailyTimelineScreen(),
     );
   }
   
-}
-
-class IncrementButton extends StatelessWidget {
-  const IncrementButton({super.key});
-  @override
-  Widget build(BuildContext context) {
-    Box tasksBox = Hive.box("tasks");
-    return Scaffold(
-      body: Column (children: [
-      TextButton(onPressed: () => tasksBox.add("test at ${DateTime.now()}"), child: Text("Press here!")),
-      Expanded(child: 
-      ValueListenableBuilder(
-          valueListenable: tasksBox.listenable(), 
-          builder: (context, Box box, widget) {
-            return ListView.builder(
-              itemCount: box.length,
-              itemBuilder: (context, index) {
-                var stamp = box.getAt(index);
-                return ListTile(title: Text(stamp.toString()));
-              }
-            );
-          }
-        ))
-      
-      ])
-    );
-  }
 }
