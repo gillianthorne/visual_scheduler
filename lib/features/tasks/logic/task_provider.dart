@@ -37,4 +37,20 @@ class TaskProvider extends ChangeNotifier {
     _tasks.removeWhere((t) => t.id == id);
     notifyListeners();
   }
+
+  List<Task> tasksForDate(DateTime date) {
+    return _tasks.where((task) {
+      return task.date.year == date.year &&
+      task.date.month == date.month &&
+      task.date.day == date.day;
+    }).toList();
+  }
+
+  Task? getTaskById(String id) {
+    try {
+      return _tasks.firstWhere((p) => p.id == id);
+    } catch (_) {
+      return null;
+    }
+  }
 }
