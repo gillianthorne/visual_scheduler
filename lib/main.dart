@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:visual_scheduler/features/categories/data/category_model.dart';
-import 'package:visual_scheduler/features/day_profiles/day_profile_model.dart';
-import 'package:visual_scheduler/features/day_profiles/profile_task_model.dart';
+import 'package:visual_scheduler/features/day_profiles/data/day_profile_model.dart';
+import 'package:visual_scheduler/features/day_profiles/data/profile_task_model.dart';
 import 'package:visual_scheduler/features/settings/data/settings_model.dart';
 import 'package:visual_scheduler/features/tasks/data/task_model.dart';
 import 'package:visual_scheduler/features/templates/data/template_model.dart';
