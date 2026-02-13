@@ -1,5 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:visual_scheduler/features/categories/data/category_model.dart';
+import 'package:visual_scheduler/features/day_profiles/day_profile_model.dart';
+import 'package:visual_scheduler/features/day_profiles/profile_task_model.dart';
+import 'package:visual_scheduler/features/settings/data/settings_model.dart';
+import 'package:visual_scheduler/features/tasks/data/task_model.dart';
+import 'package:visual_scheduler/features/templates/data/template_model.dart';
 
 
 // main is asynchronous - when run we make sure it is initialzied then 
@@ -10,6 +16,13 @@ void main() async {
   // app cannot be run without these two tasks, as that would cause an error
   await Hive.initFlutter();
   await Hive.openBox("tasks");
+
+  Hive.registerAdapter(ProfileTaskAdapter());
+  Hive.registerAdapter(DayProfileAdapter());
+  Hive.registerAdapter(TaskAdapter());
+  Hive.registerAdapter(CategoryAdapter());
+  Hive.registerAdapter(TemplateAdapter());
+  Hive.registerAdapter(SettingsAdapter());
 
   runApp(const VisualSchedulerApp());
 }

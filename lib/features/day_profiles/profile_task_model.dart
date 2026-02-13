@@ -1,6 +1,7 @@
-import 'dart:collection';
-
 import 'package:hive/hive.dart';
+
+part 'profile_task_model.g.dart';
+
 
 @HiveType(typeId: 5)
 class ProfileTask extends HiveObject {
