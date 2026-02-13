@@ -2,7 +2,7 @@ import 'package:hive/hive.dart';
 
 part "settings_model.g.dart";
 
-@HiveType(typeId: 5)
+@HiveType(typeId: 6)
 class Settings extends HiveObject {
   @HiveField(0)
   final int timeGranularity;
