@@ -61,7 +61,7 @@ class CategoryPickerSheet extends StatelessWidget {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (_) => const CreateOrEditCategoryScreen(),
+                  builder: (_) => CreateOrEditCategoryScreen(),
                 ),
               );
             },

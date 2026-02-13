@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:visual_scheduler/features/categories/data/category_model.dart';
+import 'package:visual_scheduler/features/categories/logic/category_provider.dart';
+import 'package:visual_scheduler/features/categories/presentation/category_picker_sheet.dart';
 import 'package:visual_scheduler/features/tasks/logic/task_provider.dart';
 import '../../tasks/data/task_model.dart';
 import 'package:provider/provider.dart';
@@ -19,6 +22,9 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
   late DateTime _selectedDate;
   late TimeOfDay _selectedStart;
   late Duration _selectedDuration;
+  String? selectedCategoryId;
+  Category? selectedCategory;
+  late Task editableTask;
 
   final List<Duration> _durationOptions = List.generate(
     16,
@@ -29,17 +35,23 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
   void initState() {
     super.initState();
 
-    _titleController = TextEditingController(text: widget.task.title);
-    _notesController = TextEditingController(text: widget.task.notes ?? "");
+    editableTask = widget.task;
 
-    _selectedDate = widget.task.date;
+    _titleController = TextEditingController(text: editableTask.title);
+    _notesController = TextEditingController(text: editableTask.notes ?? "");
+
+    _selectedDate = editableTask.date;
 
     _selectedStart = TimeOfDay(
-      hour: widget.task.startOffset.inHours,
-      minute: widget.task.startOffset.inMinutes % 60,
+      hour: editableTask.startOffset.inHours,
+      minute: editableTask.startOffset.inMinutes % 60,
     );
 
-    _selectedDuration = widget.task.duration;
+    _selectedDuration = editableTask.duration;
+
+    selectedCategoryId = editableTask.categoryId; // default: no category
+    selectedCategory = selectedCategoryId != null ? context.read<CategoryProvider>().getCategoryById(selectedCategoryId!) : null;
+    
   }
 
   @override
@@ -131,6 +143,29 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
               maxLines: 3,
             ),
 
+            const SizedBox(height: 16),
+
+            // CATEGORY PICKER
+            ListTile(
+              title: const Text("Category"),
+              subtitle: Text(selectedCategory == null ? "None" : selectedCategory!.name),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () async {
+                final result = await showModalBottomSheet<String>(
+                  context: context, 
+                  builder: (context) => CategoryPickerSheet(selectedCategoryId: selectedCategoryId));
+                  if (result != null) {
+                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                      setState(() {
+                        selectedCategoryId = result;
+                        selectedCategory = context.read<CategoryProvider>().getCategoryById(result);
+                        editableTask = editableTask.copyWith(categoryId: result);
+                      });
+                    });
+                  }
+              }
+            ),
+
             const Spacer(),
 
             // SAVE BUTTON
@@ -144,12 +179,13 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
                 );
 
                 // 2. Build updated task
-                final updatedTask = widget.task.copyWith(
+                final updatedTask = editableTask.copyWith(
                   title: _titleController.text,
                   notes: _notesController.text,
                   date: _selectedDate,
                   startOffset: updatedStartOffset,
                   duration: _selectedDuration,
+                  categoryId: selectedCategoryId
                   // categoryId: ... (if you add category editing)
                 );
 

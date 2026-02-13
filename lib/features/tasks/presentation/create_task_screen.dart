@@ -133,8 +133,8 @@ class _CreateTaskScreenState extends State<CreateTaskScreen> {
                   setState(() {
                     selectedCategoryId = result;
                   });
-                }
-              },
+                };
+              }
             ),
 
             const SizedBox(height: 16),
@@ -178,7 +178,7 @@ class _CreateTaskScreenState extends State<CreateTaskScreen> {
       startOffset: startOffset,
       duration: _selectedDuration,
       date: _selectedDate,
-      categoryId: null,
+      categoryId: selectedCategoryId,
       templateId: null,
       allowOverlap: true,
       isReminder: false

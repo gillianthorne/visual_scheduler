@@ -1,53 +1,33 @@
 import 'package:flutter/material.dart';
-import 'package:visual_scheduler/features/categories/logic/category_provider.dart';
-import '../data/task_model.dart';
-import "edit_task_screen.dart";
 import 'package:provider/provider.dart';
-import '../logic/task_provider.dart';
+import 'package:visual_scheduler/features/categories/logic/category_provider.dart';
+import 'package:visual_scheduler/features/tasks/logic/task_provider.dart';
+import '../data/task_model.dart';
+import 'edit_task_screen.dart';
 
-class TaskDetailsScreen extends StatefulWidget {
-  final Task task;
+class TaskDetailsScreen extends StatelessWidget {
+  final Task task; // initial snapshot
 
-  const TaskDetailsScreen({super.key, required this.task});
+  const TaskDetailsScreen({
+    super.key,
+    required this.task,
+  });
 
-  @override
-  State<TaskDetailsScreen> createState() => _TaskDetailsScreenState();
-}
-
-class _TaskDetailsScreenState extends State<TaskDetailsScreen> {
-  late Task task;
-
-  @override
-  void initState() {
-    super.initState();
-    task = widget.task; // initial version
-    
+  String _formatTime(Duration d) {
+    final h = d.inHours.toString().padLeft(2, "0");
+    final m = (d.inMinutes % 60).toString().padLeft(2, "0");
+    return "$h:$m";
   }
 
-  void _refreshTask() {
-    final provider = context.read<TaskProvider>();
-    final updated = provider.getTaskById(task.id);
-
-    if (updated != null) {
-      setState(() {
-        task = updated;
-      });
-    }
-  }
-
-  
   @override
   Widget build(BuildContext context) {
-    print("categoryId type: ${task.categoryId.runtimeType}");
-    print("categoryId value: ${task.categoryId}");
-    final start = task.startOffset;
-    final end = task.startOffset + task.duration;
+    // Always prefer the latest version from provider, fall back to the passed-in one
+    final providerTask =
+        context.watch<TaskProvider>().getTaskById(task.id);
+    final effectiveTask = providerTask ?? task;
 
-    String formatTime(Duration d) {
-      final h = d.inHours.toString().padLeft(2, "0");
-      final m = (d.inMinutes % 60).toString().padLeft(2, "0");
-      return "$h:$m";
-    }
+    final start = effectiveTask.startOffset;
+    final end = effectiveTask.startOffset + effectiveTask.duration;
 
     return Scaffold(
       appBar: AppBar(
@@ -55,36 +35,39 @@ class _TaskDetailsScreenState extends State<TaskDetailsScreen> {
       ),
       body: Padding(
         padding: const EdgeInsets.all(16),
-        child: Column (
+        child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text (
-              task.title,
+            // TITLE
+            Text(
+              effectiveTask.title,
               style: const TextStyle(
                 fontSize: 24,
-                fontWeight: FontWeight.bold
+                fontWeight: FontWeight.bold,
               ),
             ),
 
             const SizedBox(height: 16),
 
+            // TIME RANGE
             Text(
-              "${formatTime(start)} - ${formatTime(end)}",
-              style: const TextStyle(color: Colors.grey)
+              "${_formatTime(start)} - ${_formatTime(end)}",
+              style: const TextStyle(color: Colors.grey),
             ),
 
             const SizedBox(height: 8),
 
             // DURATION
             Text(
-              "Duration: ${task.duration.inMinutes} minutes",
+              "Duration: ${effectiveTask.duration.inMinutes} minutes",
               style: const TextStyle(color: Colors.grey),
             ),
 
             const SizedBox(height: 24),
 
             // NOTES
-            if (task.notes != null && task.notes!.isNotEmpty)
+            if (effectiveTask.notes != null &&
+                effectiveTask.notes!.isNotEmpty)
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -96,14 +79,17 @@ class _TaskDetailsScreenState extends State<TaskDetailsScreen> {
                     ),
                   ),
                   const SizedBox(height: 8),
-                  Text(task.notes!),
+                  Text(effectiveTask.notes!),
                   const SizedBox(height: 24),
                 ],
               ),
 
             // CATEGORY
-            if (task.categoryId != null)
-              _buildCategorySection(context, task.categoryId!),
+            if (effectiveTask.categoryId != null)
+              _buildCategorySection(
+                context,
+                effectiveTask.categoryId!,
+              ),
 
             const Spacer(),
 
@@ -112,14 +98,15 @@ class _TaskDetailsScreenState extends State<TaskDetailsScreen> {
               children: [
                 Expanded(
                   child: ElevatedButton(
-                    onPressed: () {
-                      Navigator.push(
+                    onPressed: () async {
+                      await Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (_) => EditTaskScreen(task: task),
+                          builder: (_) =>
+                              EditTaskScreen(task: effectiveTask),
                         ),
                       );
-                      _refreshTask();
+                      // No manual refresh needed: provider + watch() rebuild this screen
                     },
                     child: const Text("Edit"),
                   ),
@@ -141,25 +128,28 @@ class _TaskDetailsScreenState extends State<TaskDetailsScreen> {
     );
   }
 
-Widget _buildCategorySection(BuildContext context, String categoryId) {
-    final category = context.read<CategoryProvider>().getCategoryById(categoryId);
+  Widget _buildCategorySection(BuildContext context, String categoryId) {
+    final category =
+        context.watch<CategoryProvider>().getCategoryById(categoryId);
+
+    if (category == null) {
+      return const SizedBox.shrink();
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          "Category",
-          style: TextStyle(
+        Text(
+          "Category: ${category.name}",
+          style: const TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.bold,
           ),
         ),
         const SizedBox(height: 8),
-        Text(
-          "Placeholder"
-          // {category!.name}
-        ),
+        const Text("Placeholder"),
         const SizedBox(height: 4),
-        Text("Category notes here"),
+        const Text("Category notes here"),
         const SizedBox(height: 24),
       ],
     );
