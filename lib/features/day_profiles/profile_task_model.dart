@@ -1,9 +1,9 @@
+import 'dart:collection';
+
 import 'package:hive/hive.dart';
 
-part "task_model.g.dart";
-
-@HiveType(typeId: 1)
-class Task extends HiveObject {
+@HiveType(typeId: 5)
+class ProfileTask extends HiveObject {
   @HiveField(0)
   final String id;
 
@@ -11,54 +11,53 @@ class Task extends HiveObject {
   final String title;
 
   @HiveField(2)
-  final DateTime startTime;
+  final Duration startOffset;
 
   @HiveField(3)
-  final DateTime endTime;
-
-  @HiveField(4)
   final String? categoryId;
 
-  @HiveField(5)
+  @HiveField(4)
   final String? templateId;
 
-  @HiveField(6)
+  @HiveField(5)
   final bool allowOverlap;
 
-  @HiveField(7)
+  @HiveField(6)
   final bool isReminder;
 
-  @HiveField(8)
+  @HiveField(7)
   final String? notes;
 
-  Task({
+  @HiveField(8)
+  final Duration duration;
+
+  ProfileTask({
     required this.id,
     required this.title,
-    required this.startTime,
-    required this.endTime,
+    required this.startOffset,
+    required this.duration,
     this.categoryId,
     this.templateId,
     this.allowOverlap = true,
     this.isReminder = false,
-    this.notes
+    this.notes,
   });
-
-  Task copyWith({
+  ProfileTask copyWith({
     String? id,
     String? title,
-    DateTime? startTime,
-    DateTime? endTime,
+    Duration? startOffset,
+    Duration? duration,
     String? categoryId,
     String? templateId,
     bool? allowOverlap,
     bool? isReminder,
     String? notes,
   }) {
-    return Task(
+    return ProfileTask(
       id: id ?? this.id,
       title: title ?? this.title,
-      startTime: startTime ?? this.startTime,
-      endTime: endTime ?? this.endTime,
+      startOffset: startOffset ?? this.startOffset,
+      duration: duration ?? this.duration,
       categoryId: categoryId ?? this.categoryId,
       templateId: templateId ?? this.templateId,
       allowOverlap: allowOverlap ?? this.allowOverlap,
@@ -66,9 +65,8 @@ class Task extends HiveObject {
       notes: notes ?? this.notes,
     );
   }
-
   @override
   String toString() {
-    return "Task(title: $title, start: $startTime, end: $endTime)";
+    return "ProfileTask(id: $id, title: $title, startOffset: $startOffset, duration: $duration)";
   }
 }
