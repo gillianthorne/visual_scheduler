@@ -1,10 +1,12 @@
 import "package:flutter/foundation.dart" hide Category;
+import 'package:hive/hive.dart';
 import '../data/category_model.dart';
 import '../data/category_repository.dart';
 
 class CategoryProvider extends ChangeNotifier {
   final CategoryRepository _repository;
   List<Category> _categories = [];
+  final Box<Category> _box = Hive.box<Category>('categories');
 
   List<Category> get categories => _categories;
 
@@ -37,5 +39,24 @@ class CategoryProvider extends ChangeNotifier {
     _categories.removeWhere((c) => c.id == id);
     notifyListeners();
   }
+
+  Category? getCategoryById(String id) {
+    try {
+      return _categories.firstWhere((p) => p.id == id);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  List<Category> get allCategories {
+  return _box.values.toList()
+    ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
+  }
+  
+  int get nextSortOrder {
+    if (_box.isEmpty) return 0;
+    return _box.values.map((c) => c.sortOrder).reduce((a, b) => a > b ? a : b) + 1;
+  }
+
 
 }
