@@ -64,9 +64,9 @@ This project serves two purposes:
 ---
 
 ## 🚧 Current Status
-- [ ] Core models + Hive adapters  
-- [ ] Basic timeline UI  
-- [ ] Task creation + editing  
+- [x] Core models + Hive adapters  
+- [x] Basic timeline UI  
+- [x] Task creation + editing  
 - [ ] Overlap rendering  
 - [ ] Templates  
 - [ ] Day profiles  
