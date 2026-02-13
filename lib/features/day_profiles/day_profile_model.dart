@@ -40,7 +40,6 @@ class DayProfile extends HiveObject {
 
   @override
   String toString() {
-    // TODO: implement toString
     return "DayProfile(name: $name, id: $id)";
   }
 }
