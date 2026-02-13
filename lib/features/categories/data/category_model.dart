@@ -19,12 +19,16 @@ class Category extends HiveObject {
   @HiveField(4)
   int sortOrder;
 
+  @HiveField(5)
+  final String? notes;
+
   Category({
     required this.id,
     required this.name,
     required this.colourValue,
     this.iconName,
-    required this.sortOrder
+    required this.sortOrder,
+    this.notes
   });
 
   Category copyWith({
@@ -32,13 +36,15 @@ class Category extends HiveObject {
     String? name,
     int? colourValue,
     String? iconName,
-    int? sortOrder
+    int? sortOrder,
+    String? notes
   }) {
     return Category(id: id ?? this.id,
       name: name ?? this.name,
       colourValue: colourValue ?? this.colourValue, 
       iconName: iconName ?? this.iconName,
-      sortOrder: sortOrder ?? this.sortOrder);
+      sortOrder: sortOrder ?? this.sortOrder,
+      notes: notes ?? this.notes);
   }
 
   @override
