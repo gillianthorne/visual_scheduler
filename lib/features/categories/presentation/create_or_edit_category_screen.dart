@@ -24,6 +24,19 @@ class _CreateOrEditCategoryScreenState
   late TextEditingController _notesController;
   final uuid = Uuid();
 
+  final List<Color> presetColours = [
+    Colors.red,
+    Colors.orange,
+    Colors.yellow,
+    Colors.green,
+    Colors.blue,
+    Colors.purple,
+    Colors.pink.shade300,
+    Colors.teal
+  ];
+
+  Color selectedColour = Colors.purple;
+
 
   @override
   void initState() {
@@ -43,6 +56,7 @@ class _CreateOrEditCategoryScreenState
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
+            // NAME
             TextField(
               controller: _nameController,
               decoration: const InputDecoration(labelText: "Category Name"),
@@ -50,20 +64,47 @@ class _CreateOrEditCategoryScreenState
 
             const SizedBox(height: 16),
 
+            // NOTES
             TextField(
               controller: _notesController,
               decoration: const InputDecoration(labelText: "Notes (optional)"),
               maxLines: 3,
             ),
 
+            const SizedBox(height: 16,),
+
+            // COLOUR PICKER
+            Wrap(
+              spacing: 8,
+              children: presetColours.map((c) {
+                return GestureDetector(
+                  onTap: () => setState(() => selectedColour = c),
+                  child: Container(
+                    width: 32,
+                    height: 32,
+                    decoration: BoxDecoration(
+                      color: c,
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: selectedColour == c ? Colors.black : Colors.transparent,
+                        width: 2,
+                      ),
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+
+
             const Spacer(),
 
+            // SUBMIT
             ElevatedButton(
               onPressed: () {
                 final updatedCategory = (widget.category ?? Category(
                   id: uuid.v4(),
                   name: _nameController.text,
-                  colourValue: 0xFFFC107,
+                  colourValue: selectedColour.toARGB32(),
                   iconName: null,
                   sortOrder: 0,
                   notes: null,

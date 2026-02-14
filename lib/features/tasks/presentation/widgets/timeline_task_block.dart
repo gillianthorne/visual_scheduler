@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:visual_scheduler/features/categories/logic/category_provider.dart';
 import '../../data/task_model.dart';
 
 class TimelineTaskBlock extends StatelessWidget {
@@ -9,6 +11,9 @@ class TimelineTaskBlock extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final height = task.duration.inMinutes.toDouble();
+    
+    final category = context.watch<CategoryProvider>().getCategoryById(task.categoryId ?? "");
+    final int colour = category?.colourValue ?? Colors.deepPurple.shade300.toARGB32();
 
     return Container(
       height: height,
@@ -18,7 +23,7 @@ class TimelineTaskBlock extends StatelessWidget {
       ),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.deepPurple.shade300,
+        color: Color(colour),
         borderRadius: BorderRadius.circular(8)
       ),
       child: Column(
