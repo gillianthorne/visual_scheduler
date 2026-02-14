@@ -18,10 +18,13 @@ class CreateOrEditCategoryScreen extends StatefulWidget {
       _CreateOrEditCategoryScreenState();
 }
 
-class _CreateOrEditCategoryScreenState
-    extends State<CreateOrEditCategoryScreen> {
+class _CreateOrEditCategoryScreenState extends State<CreateOrEditCategoryScreen> {
   late TextEditingController _nameController;
   late TextEditingController _notesController;
+
+  late Color selectedColour;
+  late Category? editableCategory;
+
   final uuid = Uuid();
 
   final List<Color> presetColours = [
@@ -35,22 +38,27 @@ class _CreateOrEditCategoryScreenState
     Colors.teal
   ];
 
-  Color selectedColour = Colors.purple;
-
-
   @override
   void initState() {
     super.initState();
-    _nameController = TextEditingController(text: widget.category?.name ?? "");
-    _notesController = TextEditingController(text: widget.category?.notes ?? "");
-    
+    editableCategory = widget.category;
+
+    _nameController = TextEditingController(text: editableCategory?.name ?? "");
+    _notesController = TextEditingController(text: editableCategory?.notes ?? "");
+
+    if (editableCategory != null) {
+      selectedColour = Color(editableCategory!.colourValue);
+      print("Colour value set to preexisting colour");
+    } else {
+      selectedColour = Colors.purple;
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.category == null ? "New Category" : "Edit Category"),
+        title: Text(editableCategory == null ? "New Category" : "Edit Category"),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16),
@@ -86,7 +94,7 @@ class _CreateOrEditCategoryScreenState
                       color: c,
                       shape: BoxShape.circle,
                       border: Border.all(
-                        color: selectedColour == c ? Colors.black : Colors.transparent,
+                        color: selectedColour.toARGB32() == c.toARGB32() ? Colors.black : Colors.transparent,
                         width: 2,
                       ),
                     ),
@@ -101,17 +109,24 @@ class _CreateOrEditCategoryScreenState
             // SUBMIT
             ElevatedButton(
               onPressed: () {
-                final updatedCategory = (widget.category ?? Category(
-                  id: uuid.v4(),
-                  name: _nameController.text,
-                  colourValue: selectedColour.toARGB32(),
-                  iconName: null,
-                  sortOrder: 0,
-                  notes: null,
-                )).copyWith(
-                  name: _nameController.text,
-                  notes: _notesController.text.isEmpty ? null : _notesController.text,
-                );
+                Category updatedCategory;
+                if (editableCategory != null) {
+                  updatedCategory = editableCategory!.copyWith(
+                    name: _nameController.text,
+                    colourValue: selectedColour.toARGB32(),
+                    notes: _notesController.text,
+                  );
+                } else {
+                  updatedCategory = Category(
+                    id: uuid.v4(),
+                    name: _nameController.text,
+                    colourValue: selectedColour.toARGB32(),
+                    iconName: null,
+                    sortOrder: 0,
+                    notes: _notesController.text,
+                  );
+                }
+                
 
                 // 3. Update via provider
                 context.read<CategoryProvider>().updateCategory(updatedCategory);
@@ -119,7 +134,7 @@ class _CreateOrEditCategoryScreenState
                 // 4. Pop back
                 Navigator.pop(context);
               },
-              child: Text(widget.category == null ? "Create" : "Save Changes"),
+              child: Text(editableCategory == null ? "Create" : "Save Changes"),
             ),
           ],
         ),

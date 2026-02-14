@@ -48,6 +48,15 @@ class CategoryPickerSheet extends StatelessWidget {
               onTap: () {
                 Navigator.pop(context, cat.id);
               },
+              onLongPress: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => CreateOrEditCategoryScreen(category: cat)
+                  )
+                );
+              },
             );
           }),
 
