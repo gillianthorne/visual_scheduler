@@ -38,6 +38,8 @@ class _CreateTaskScreenState extends State<CreateTaskScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final categoryProvider = context.watch<CategoryProvider>();
+    final selectedCategory = selectedCategoryId == null ? null : categoryProvider.getCategoryById(selectedCategoryId!);
     return Scaffold(
       appBar: AppBar(title: const Text("Create Task")),
       body: Padding(
@@ -118,7 +120,7 @@ class _CreateTaskScreenState extends State<CreateTaskScreen> {
             ListTile(
               title: const Text("Category"),
               subtitle: Text(
-                selectedCategory == null ? "None" : selectedCategory!.name,
+                selectedCategory?.name ?? "None",
               ),
               trailing: const Icon(Icons.chevron_right),
               onTap: () async {
@@ -133,7 +135,7 @@ class _CreateTaskScreenState extends State<CreateTaskScreen> {
                   setState(() {
                     selectedCategoryId = result;
                   });
-                };
+                }
               }
             ),
 
@@ -151,6 +153,7 @@ class _CreateTaskScreenState extends State<CreateTaskScreen> {
             const Spacer(),
 
             // SAVE BUTTON
+
             ElevatedButton(
               onPressed: () {
                 print("\n\nSaving task for $_selectedDate");
