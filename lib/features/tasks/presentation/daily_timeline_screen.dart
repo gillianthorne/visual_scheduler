@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:visual_scheduler/features/categories/logic/category_provider.dart';
 import 'package:visual_scheduler/features/tasks/presentation/create_task_screen.dart';
@@ -26,25 +27,37 @@ class _DailyTimelineScreenState extends State<DailyTimelineScreen> {
     print("\n\nTimeline showing date: $_selectedDate");
     return Scaffold(
     body: Column(
-      children: [
-        _buildDateHeader(),
+  children: [
+    _buildDateHeader(),
 
-        Expanded(
-          child: SingleChildScrollView(
-            child: SizedBox(
-              height: 48 * 60,
-              child: Stack(
-                children: [
-                  _buildTimelineGrid(),      // 30-min intervals
-                  _buildTaskBlocks(tasks),   // positioned tasks
-                ],
+    Expanded(
+      child: SingleChildScrollView(
+        child: SizedBox(
+          height: 48 * 60,
+          child: Row(
+            children: [
+              // LEFT TIME COLUMN
+              Container(
+                width: 75,
+                color: Colors.deepPurple.shade50,
+                child: _buildTimelineGrid(),
               ),
-            ),
-            
+
+              // TASK AREA
+              Expanded(
+                child: Stack(
+                  children: [
+                    _buildTaskBlocks(tasks) // positioned tasks
+                  ],
+                ),
+              ),
+            ],
           ),
         ),
-      ],
+      ),
     ),
+  ],
+),
 
     floatingActionButton: FloatingActionButton(
       onPressed: () {
@@ -60,17 +73,20 @@ class _DailyTimelineScreenState extends State<DailyTimelineScreen> {
   }
 
   Widget _buildTimelineLabels() {
-    return Column(
-      children: List.generate(24, (i) {
-        return SizedBox(
-          height: 60,
-          child: Text(
-            "${i.toString().padLeft(2, '0')}:00",
-            style: const TextStyle(fontSize: 12, color: Colors.grey),
-          ),
-        );
-      }),
+    return Container (
+      child: Column(
+        children: List.generate(24, (i) {
+          return SizedBox(
+            height: 60,
+            child: Text(
+              "${i.toString().padLeft(2, '0')}:00",
+              style: const TextStyle(fontSize: 12, color: Colors.grey),
+            ),
+          );
+        }),
+      )
     );
+    
   }
 
   Widget _buildDateSelector() {
@@ -104,8 +120,15 @@ class _DailyTimelineScreenState extends State<DailyTimelineScreen> {
 }
   
   Widget _buildDateHeader() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+    final date = _selectedDate;
+    final dayName = DateFormat("EEEE").format(date);
+    final monthDay = DateFormat("MMMM d").format(date);
+    final year = DateFormat('y').format(date);
+
+    return Container (
+      color: Colors.deepPurple.shade50,
+      child: Padding(
+      padding: const EdgeInsetsGeometry.fromLTRB(16, 32, 16, 12),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -115,26 +138,39 @@ class _DailyTimelineScreenState extends State<DailyTimelineScreen> {
                 _selectedDate = _selectedDate.subtract(const Duration(days: 1));
               });
             }, 
-            icon: const Icon(Icons.chevron_left)),
-  
-          Text (
-            "${_selectedDate.day}-${_selectedDate.month}-${_selectedDate.year}",
-            style: const TextStyle (
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-            )
-          ),
+            icon: Icon(Icons.chevron_left, size: 32)),
+          InkWell(
+            onTap: () async {
+              final picked = await showDatePicker(
+                context: context,
+                initialDate: _selectedDate,
+                firstDate: DateTime(2000),
+                lastDate: DateTime(2100),
+              );
 
+              if (picked != null) {
+                setState(() => _selectedDate = picked);
+              }
+            },
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Text(dayName, style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                Text(monthDay, style: TextStyle(fontSize: 16)),
+                Text(year, style: TextStyle(fontSize: 16)),
+              ],
+            ),
+          ),
           IconButton(
             onPressed: () {
               setState(() {
                 _selectedDate = _selectedDate.add(const Duration(days: 1));
               });
             }, 
-            icon: const Icon(Icons.chevron_right)),
-  
+            icon: const Icon(Icons.chevron_right, size: 32,)),
         ],
-    ));
+    ))    
+    );
   }
 
   Widget _buildTimelineGrid() {
@@ -163,8 +199,8 @@ Widget _buildTaskBlocks(List<Task> tasks) {
         final durationMinutes = task.duration.inMinutes;
         return Positioned(
           top: startMinutes * 2,
-          left: 80,
-          right: 16, 
+          left: 8,
+          right: 8, 
           height: durationMinutes * 2,
           child: GestureDetector(
             onTap: () {
