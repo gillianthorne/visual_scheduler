@@ -33,7 +33,7 @@ class _DailyTimelineScreenState extends State<DailyTimelineScreen> {
     Expanded(
       child: SingleChildScrollView(
         child: SizedBox(
-          height: 48 * 60,
+          height: 48 * 60 * 2,
           child: Row(
             children: [
               // LEFT TIME COLUMN
@@ -180,7 +180,7 @@ class _DailyTimelineScreenState extends State<DailyTimelineScreen> {
         final minute = (i % 2) * 30;
 
         return Container(
-          height: 60,
+          height: 120,
           padding: const EdgeInsets.only(left: 16),
           alignment: Alignment.topLeft,
           child: Text(
@@ -198,10 +198,10 @@ Widget _buildTaskBlocks(List<Task> tasks) {
         final startMinutes = task.startOffset.inMinutes;
         final durationMinutes = task.duration.inMinutes;
         return Positioned(
-          top: startMinutes * 2,
+          top: startMinutes * 4,
           left: 8,
           right: 8, 
-          height: durationMinutes * 2,
+          height: durationMinutes * 4,
           child: GestureDetector(
             onTap: () {
               Navigator.push(

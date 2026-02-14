@@ -21,13 +21,13 @@ class TimelineTaskBlock extends StatelessWidget {
         vertical: 8,
         horizontal: 16
       ),
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 0),
       decoration: BoxDecoration(
         color: Color(colour),
         borderRadius: BorderRadius.circular(8)
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Text(
             task.title, 
@@ -35,9 +35,9 @@ class TimelineTaskBlock extends StatelessWidget {
               fontSize: 16,
               fontWeight: FontWeight.bold
             )),
-          const SizedBox(height: 4),
+          const SizedBox(width: 14),
           Text(_formatTimeRange(task),
-          style: const TextStyle(fontSize: 12))
+          style: const TextStyle(fontSize: 14))
         ],
       ),
     );
