@@ -34,7 +34,6 @@ void main() async {
   final taskRepository = TaskRepository(Hive.box<Task>('tasksBox'));
 
   await Hive.openBox<Category>('categories');
-  final categoryRepository = CategoryRepository(Hive.box<Category>('categories'));
 
   runApp(
     MultiProvider(
@@ -43,7 +42,7 @@ void main() async {
           create: (_) => TaskProvider(taskRepository),
         ),
         ChangeNotifierProvider(
-          create: (_) => CategoryProvider(categoryRepository),
+          create: (_) => CategoryProvider(),
         ),
       ],
       child: VisualSchedulerApp(taskBox: taskBox),
