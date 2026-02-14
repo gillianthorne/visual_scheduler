@@ -107,4 +107,4 @@ This project is intentionally flexible. I’m building it iteratively as both a 
 ---
 
 ## 🙋‍♀️ About This Project
-This app is built to support my own daily planning needs while demonstrating clean architecture, thoughtful UX, and practical Flutter development.
+This app is built to support my own daily planning needs while demonstrating clean architecture, thoughtful UX, and learning practical Flutter development.
