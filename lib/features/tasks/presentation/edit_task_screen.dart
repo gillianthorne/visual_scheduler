@@ -155,52 +155,76 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
                   context: context, 
                   builder: (context) => CategoryPickerSheet(selectedCategoryId: selectedCategoryId));
                   if (result != null) {
-                    WidgetsBinding.instance.addPostFrameCallback((_) {
                       setState(() {
                         selectedCategoryId = result;
                         selectedCategory = context.read<CategoryProvider>().getCategoryById(result);
                         editableTask = editableTask.copyWith(categoryId: result);
                       });
-                    });
+                    }
                   }
-              }
-            ),
+                ),
 
             const Spacer(),
 
-            // SAVE BUTTON
-            ElevatedButton(
-              onPressed: () {
-                // You handle the logic
-                // 1. Convert TimeOfDay → Duration
-                final updatedStartOffset = Duration(
-                  hours: _selectedStart.hour,
-                  minutes: _selectedStart.minute,
-                );
+            Row(
+              children: [
+                // SAVE BUTTON
+                ElevatedButton(
+                  onPressed: () {
+                    final updatedStartOffset = Duration(
+                      hours: _selectedStart.hour,
+                      minutes: _selectedStart.minute,
+                    );
 
-                // 2. Build updated task
-                final updatedTask = editableTask.copyWith(
-                  title: _titleController.text,
-                  notes: _notesController.text,
-                  date: _selectedDate,
-                  startOffset: updatedStartOffset,
-                  duration: _selectedDuration,
-                  categoryId: selectedCategoryId
-                  // categoryId: ... (if you add category editing)
-                );
+                    final updatedTask = editableTask.copyWith(
+                      title: _titleController.text,
+                      notes: _notesController.text,
+                      date: _selectedDate,
+                      startOffset: updatedStartOffset,
+                      duration: _selectedDuration,
+                      categoryId: selectedCategoryId
+                    );
 
-                // 3. Update via provider
-                context.read<TaskProvider>().updateTask(updatedTask);
+                    context.read<TaskProvider>().updateTask(updatedTask);
 
-                // 4. Pop back
-                Navigator.pop(context);
+                    Navigator.pop(context);
+                  },
+                  child: const Text("Save Changes"),
+                ),
+                
+                const SizedBox(width: 16),
 
-              },
-              child: const Text("Save Changes"),
-            ),
-          ],
+                // DELETE TASK BUTTON
+                ElevatedButton(
+                  onPressed: () async {
+                    final confirmed = await showDialog<bool> (
+                      context: context, 
+                      builder: (context) => AlertDialog(
+                        title: const Text("Delete Task"),
+                        content: const Text("Are you sure you want to delete this task?"),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(context, false), 
+                            child: Text("Cancel")
+                          ),
+                          TextButton(
+                            onPressed: () => Navigator.pop(context, true),
+                            child: const Text("Delete"),
+                          )
+                        ],
+                      ));
+                      if (confirmed == true) {
+                        context.read<TaskProvider>().deleteTask(editableTask.id);
+                        Navigator.pop(context);
+                      }
+                  },
+                child: Text("Delete task"))
+              ],
+            )
+          ]
+            )
+            
         ),
-      ),
-    );
+      );
   }
 }
