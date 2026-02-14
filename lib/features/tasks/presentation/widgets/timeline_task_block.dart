@@ -18,7 +18,7 @@ class TimelineTaskBlock extends StatelessWidget {
     return Container(
       height: height,
       margin: const EdgeInsets.symmetric(
-        vertical: 8,
+        // vertical: 8,
         horizontal: 16
       ),
       padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 0),

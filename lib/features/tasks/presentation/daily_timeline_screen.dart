@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
-import 'package:visual_scheduler/features/categories/logic/category_provider.dart';
 import 'package:visual_scheduler/features/tasks/presentation/create_task_screen.dart';
 import 'package:visual_scheduler/features/tasks/presentation/widgets/timeline_task_block.dart';
 import '../../tasks/logic/task_provider.dart';
@@ -17,14 +16,14 @@ class DailyTimelineScreen extends StatefulWidget {
 
 class _DailyTimelineScreenState extends State<DailyTimelineScreen> {
   DateTime _selectedDate = DateTime.now(); 
+  int startTime = 6;
+  double pixelHeight = 4;
 
   @override
   Widget build(BuildContext context) {
     final taskProvider = context.watch<TaskProvider>();
     final tasks = taskProvider.tasksForDate(_selectedDate); // You'll filter these by date
-    // TODO: sort tasks by start time
     tasks.sort((a, b) => a.startOffset.compareTo(b.startOffset));
-    print("\n\nTimeline showing date: $_selectedDate");
     return Scaffold(
     body: Column(
   children: [
@@ -33,7 +32,9 @@ class _DailyTimelineScreenState extends State<DailyTimelineScreen> {
     Expanded(
       child: SingleChildScrollView(
         child: SizedBox(
-          height: 48 * 60 * 2,
+          // height is working in half hours, so 48 - start time as half hours, multiplied
+          // by each half hour in pixel height, plus a bit of padding at the bottom of the screen
+          height: (48 - startTime * 2) * 30 * pixelHeight + 16,
           child: Row(
             children: [
               // LEFT TIME COLUMN
@@ -47,6 +48,7 @@ class _DailyTimelineScreenState extends State<DailyTimelineScreen> {
               Expanded(
                 child: Stack(
                   children: [
+                    _buildGridLines(),
                     _buildTaskBlocks(tasks) // positioned tasks
                   ],
                 ),
@@ -175,46 +177,72 @@ class _DailyTimelineScreenState extends State<DailyTimelineScreen> {
 
   Widget _buildTimelineGrid() {
     return Column(
-      children: List.generate(48, (i) {
-        final hour = i ~/ 2;
+      children: List.generate(48 - (startTime*2), (i) {
+        final hour = (i ~/ 2) + startTime;
         final minute = (i % 2) * 30;
 
         return Container(
-          height: 120,
-          padding: const EdgeInsets.only(left: 16),
-          alignment: Alignment.topLeft,
-          child: Text(
-            "${hour.toString().padLeft(2, "0")}:${minute.toString().padLeft(2, "0")}",
-            style: const TextStyle(fontSize: 12, color: Colors.grey),
-          ),
+            height: 30 * pixelHeight,
+            padding: const EdgeInsets.only(left: 16),
+            alignment: Alignment.centerLeft,
+            decoration: BoxDecoration(
+              border: Border(
+                top: BorderSide(color: Colors.deepPurple.shade100)
+              )
+            ),
+            child: Text(
+              "${hour.toString().padLeft(2, "0")}:${minute.toString().padLeft(2, "0")}",
+              style: const TextStyle(fontSize: 12, color: Colors.grey),
+            ),
         );
       }),
     );
   }
 
-Widget _buildTaskBlocks(List<Task> tasks) {
-    return Stack(
-      children: tasks.map((task) {
-        final startMinutes = task.startOffset.inMinutes;
-        final durationMinutes = task.duration.inMinutes;
-        return Positioned(
-          top: startMinutes * 4,
-          left: 8,
-          right: 8, 
-          height: durationMinutes * 4,
-          child: GestureDetector(
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => TaskDetailsScreen(task: task),
-                ),
-              );
-            },
-            child: TimelineTaskBlock(task: task),
-          ),
-        );
-      }).toList(),
-    );
-  }
+  Widget _buildTaskBlocks(List<Task> tasks) {
+      return Stack(
+        children: tasks.map((task) {
+          final startMinutes = task.startOffset.inMinutes;
+          final durationMinutes = task.duration.inMinutes;
+          return Positioned(
+            top: startMinutes * pixelHeight,
+            left: 8,
+            right: 8, 
+            height: durationMinutes * pixelHeight,
+            child: GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => TaskDetailsScreen(task: task),
+                  ),
+                );
+              },
+              child: TimelineTaskBlock(task: task),
+            ),
+          );
+        }).toList(),
+      );
+    }
+
+  Widget _buildGridLines() {
+  final totalMinutes = (24 - 6) * 60;
+
+  return Stack(
+    children: List.generate(totalMinutes ~/ 60, (index) {
+      final minutesSinceStart = index * 60;
+      double top = minutesSinceStart * 4;
+
+      return Positioned(
+        top: top,
+        left: 0,
+        right: 0,
+        child: Container(
+          height: 1,
+          color: Colors.deepPurple.shade100
+        ),
+      );
+    })
+  );
+}
 }
