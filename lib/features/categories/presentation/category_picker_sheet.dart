@@ -14,7 +14,7 @@ class CategoryPickerSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final categories = context.watch<CategoryProvider>().allCategories;
+    final categories = context.watch<CategoryProvider>().categories;
 
     return SafeArea(
       child: Column(
@@ -35,6 +35,7 @@ class CategoryPickerSheet extends StatelessWidget {
           ...categories.map((cat) {
             return ListTile(
               leading: CircleAvatar(
+                radius: 10,
                 backgroundColor: Color(cat.colourValue),
               ),
               title: Text(cat.name),

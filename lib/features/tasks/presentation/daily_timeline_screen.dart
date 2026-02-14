@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:visual_scheduler/features/categories/logic/category_provider.dart';
 import 'package:visual_scheduler/features/tasks/presentation/create_task_screen.dart';
 import 'package:visual_scheduler/features/tasks/presentation/widgets/timeline_task_block.dart';
 import '../../tasks/logic/task_provider.dart';
@@ -155,30 +156,29 @@ class _DailyTimelineScreenState extends State<DailyTimelineScreen> {
     );
   }
 
-  Widget _buildTaskBlocks(List<Task> tasks) {
-      return Stack(
-        children: tasks.map((task) {
-          final startMinutes = task.startOffset.inMinutes;
-          final durationMinutes = task.duration.inMinutes;
-
-          return Positioned(
-            top: startMinutes * 2,
-            left: 80,
-            right: 16, 
-            height: durationMinutes * 2,
-            child: GestureDetector(
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => TaskDetailsScreen(task: task),
-                  ),
-                );
-              },
-              child: TimelineTaskBlock(task: task),
-            ),
-          );
-        }).toList(),
-      );
+Widget _buildTaskBlocks(List<Task> tasks) {
+    return Stack(
+      children: tasks.map((task) {
+        final startMinutes = task.startOffset.inMinutes;
+        final durationMinutes = task.duration.inMinutes;
+        return Positioned(
+          top: startMinutes * 2,
+          left: 80,
+          right: 16, 
+          height: durationMinutes * 2,
+          child: GestureDetector(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => TaskDetailsScreen(task: task),
+                ),
+              );
+            },
+            child: TimelineTaskBlock(task: task),
+          ),
+        );
+      }).toList(),
+    );
   }
 }
