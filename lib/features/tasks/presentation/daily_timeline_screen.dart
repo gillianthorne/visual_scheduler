@@ -6,6 +6,7 @@ import 'package:visual_scheduler/features/tasks/presentation/widgets/timeline_ta
 import '../../tasks/logic/task_provider.dart';
 import '../data/task_model.dart';
 import 'task_details_screen.dart';
+import 'dart:async';
 
 class DailyTimelineScreen extends StatefulWidget {
   const DailyTimelineScreen({super.key});
@@ -18,6 +19,17 @@ class _DailyTimelineScreenState extends State<DailyTimelineScreen> {
   DateTime _selectedDate = DateTime.now(); 
   int startTime = 6;
   double pixelHeight = 4;
+  late Timer timer;
+
+  @override
+  void initState() {
+    print("INIT STATE RAN");
+    super.initState();
+    timer = Timer.periodic(Duration(minutes: 1), (_) {
+      setState(() {});
+      print("This is running");
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -49,7 +61,8 @@ class _DailyTimelineScreenState extends State<DailyTimelineScreen> {
                 child: Stack(
                   children: [
                     _buildGridLines(),
-                    _buildTaskBlocks(tasks) // positioned tasks
+                    _buildTaskBlocks(tasks), // positioned tasks
+                    _buildTimeLine()
                   ],
                 ),
               ),
@@ -205,7 +218,7 @@ class _DailyTimelineScreenState extends State<DailyTimelineScreen> {
           final startMinutes = task.startOffset.inMinutes;
           final durationMinutes = task.duration.inMinutes;
           return Positioned(
-            top: startMinutes * pixelHeight,
+            top: startMinutes * pixelHeight - (startTime * 60 * pixelHeight),
             left: 8,
             right: 8, 
             height: durationMinutes * pixelHeight,
@@ -245,4 +258,36 @@ class _DailyTimelineScreenState extends State<DailyTimelineScreen> {
     })
   );
 }
+
+  Widget _buildTimeLine() {
+    Duration offset = Duration(hours: DateTime.now().hour, minutes: DateTime.now().minute);
+    
+    double lineOffset = offset.inMinutes.toDouble() * pixelHeight - (startTime * 60 * pixelHeight);
+
+    final today = "${DateTime.now().year}-${DateTime.now().month}-${DateTime.now().day}";
+    final comparedDay = "${_selectedDate.year}-${_selectedDate.month}-${_selectedDate.day}";
+
+
+    if (today == comparedDay) {
+      return Positioned(
+        top: lineOffset,
+        left: 0,
+        right: 0,
+        child: Container(
+          height: 3,
+          color: Colors.red,
+        ),
+    );
+    } else {
+      return Positioned (
+        top: -5,
+        left: 0,
+        right: 0,
+        child: Container(
+          height: 3,
+          color: Colors.red,
+        )
+      );
+    }    
+  }
 }
