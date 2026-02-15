@@ -14,13 +14,18 @@ class TaskDetailsScreen extends StatelessWidget {
   });
 
   String _formatTime(Duration d) {
-    final h = d.inHours.toString().padLeft(2, "0");
-    final m = (d.inMinutes % 60).toString().padLeft(2, "0");
-    return "$h:$m";
+    int hours = d.inHours;
+    String amPm = (hours >= 12 ? "PM" : "AM");
+    hours = (hours > 12 ? hours - 12 : hours);
+    final minutes = d.inMinutes % 60;
+    final h = hours.toString();
+    final m = minutes.toString().padLeft(2, "0");
+    return "$h:$m $amPm";
   }
 
   @override
   Widget build(BuildContext context) {
+    print(task.isReminder);
     // Always prefer the latest version from provider, fall back to the passed-in one
     final providerTask =
         context.watch<TaskProvider>().getTaskById(task.id);
