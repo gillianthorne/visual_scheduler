@@ -34,4 +34,12 @@ class TemplateProvider extends ChangeNotifier {
         _templates.removeWhere((t) => t.id == id);
         notifyListeners();
     }
+
+    Template? getTemplateById(String id) {
+    try {
+      return _templates.firstWhere((p) => p.id == id);
+    } catch (_) {
+      return null;
+    }
+  }
 }
