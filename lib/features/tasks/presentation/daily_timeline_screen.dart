@@ -1,3 +1,4 @@
+import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
@@ -24,7 +25,7 @@ class _DailyTimelineScreenState extends State<DailyTimelineScreen> {
   @override
   void initState() {
     super.initState();
-    timer = Timer.periodic(Duration(minutes: 1), (_) {
+    timer = Timer.periodic(Duration(minutes: 5), (_) {
       setState(() {});
     });
   }
@@ -213,31 +214,58 @@ class _DailyTimelineScreenState extends State<DailyTimelineScreen> {
   );
 }
 
-
   Widget _buildGridLines() {
   final totalMinutes = (24 - 6) * 60 * 2;
 
   return Stack(
-    children: List.generate(totalMinutes ~/ 30, (index) {
-      final minutesSinceStart = index * 30;
-      double top = minutesSinceStart * 2 + 1;
+    children: List.generate(totalMinutes ~/ 15, (index) {
+      // print(index);
+      final minutesSinceStart = index * 15;
+      // print(minutesSinceStart);
+      double top = minutesSinceStart * 4 + 1;
+      BorderSide border = BorderSide();
 
-      return Positioned(
-        top: top,
-        left: 0,
-        right: 0,
-        child: Container(
-          height: 1,
-          decoration: BoxDecoration(
-            border: Border(
-              bottom: BorderSide(
-                color: Colors.deepPurple.shade100,
-                width: (minutesSinceStart % 60 == 30 ? 1 : 2)
+      if (minutesSinceStart % 60 == 0) {
+        border = BorderSide(color: Colors.deepPurple.shade100, width: 2);
+      }
+      else if (minutesSinceStart % 60 == 30) {
+        border = BorderSide(color: Colors.deepPurple.shade100, width: 1);
+      } 
+
+      if (minutesSinceStart % 30 != 15 ) {
+        return Positioned(
+          top: top,
+          left: 0,
+          right: 0,
+          child: Container(
+            height: 1,
+            decoration: BoxDecoration(
+              border: Border(
+                bottom: border
               )
-            )
+            ),
           ),
-        ),
-      );
+        );
+      } else {
+        // print(minutesSinceStart);
+        return Positioned(
+          top: top,
+          left: 0,
+          right: 0,
+          child: DottedBorder(
+            options: RectDottedBorderOptions(
+              strokeWidth: 1,
+              padding: EdgeInsets.all(0),
+              dashPattern: [10, 5],
+              color: Colors.deepPurple.shade50,
+            ),
+            child: Container(
+              height: 0,
+            )
+          )
+        );
+      }
+      
     })
   );
 }
