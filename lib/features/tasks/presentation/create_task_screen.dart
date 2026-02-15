@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:provider/provider.dart';
 import 'package:visual_scheduler/features/categories/logic/category_provider.dart';
+import 'package:visual_scheduler/features/templates/data/template_model.dart';
+import 'package:visual_scheduler/features/templates/logic/template_provider.dart';
+import 'package:visual_scheduler/features/templates/presentation/template_picker_sheet.dart';
 import '../../tasks/logic/task_provider.dart';
 import '../../tasks/data/task_model.dart';
 import 'package:uuid/uuid.dart';
@@ -25,11 +29,19 @@ class _CreateTaskScreenState extends State<CreateTaskScreen> {
   Duration _selectedDuration = const Duration(hours: 1);
   bool _reminder = true;
 
+  String? selectedTemplateId;
+  Template? selectedTemplate;
+
+  String? taskTemplateId;
+
   @override
   void initState() {
     super.initState();
     selectedCategoryId = null; // default: no category
     selectedCategory = null;
+
+    selectedTemplateId = null;
+    selectedTemplate = null;
   }
 
   final List<Duration> _durationOptions = List.generate(
@@ -168,17 +180,62 @@ class _CreateTaskScreenState extends State<CreateTaskScreen> {
 
             // SAVE BUTTON
 
-            ElevatedButton(
-              onPressed: () {
-                print("\n\nSaving task for $_selectedDate");
-                _saveTask(context);
-              },
-              child: const Text("Save Task"),
+            Row(
+              children: [
+                Expanded(
+                  child:
+                    ElevatedButton(
+                      onPressed: () {
+                        print("\n\nSaving task for $_selectedDate");
+                        _saveTask(context);
+                      },
+                      child: const Text("Save Task"),
+                    ),
+                ),
+                const SizedBox(width: 16,),
+                Expanded (
+                  child: 
+                    ElevatedButton(
+                      onPressed: () {
+                        _saveTemplate(context);
+                        Fluttertoast.showToast(
+                          msg: "Category saved!",
+                          toastLength: Toast.LENGTH_SHORT,
+                          gravity: ToastGravity.BOTTOM,
+                        );
+                      }, 
+                      child: const Text("Save as template"))
+                )    
+              ]        
             ),
-          ],
-        ),
-      ),
-    );
+                
+              
+            ListTile(
+              title: const Text("Load from Template"),
+              subtitle: Text(selectedTemplate?.name ?? "None"),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () async {
+                final result = await showModalBottomSheet<String>(
+                  context: context, 
+                  builder: (_) => TemplatePickerSheet(
+                    selectedTemplateId: selectedTemplateId,
+                    ),
+                );
+                  if (result != null) {
+                      setState(() {
+                        selectedTemplateId = result;
+                        selectedTemplate = context.read<TemplateProvider>().getTemplateById(selectedTemplateId!);
+                        _updateTask(selectedTemplate!);
+                      });
+                      
+                    }
+                  }
+                ),
+              ]
+              ),
+            )
+        );
+
   }
 
   void _saveTask(BuildContext context) {
@@ -198,11 +255,36 @@ class _CreateTaskScreenState extends State<CreateTaskScreen> {
       categoryId: selectedCategoryId,
       templateId: null,
       allowOverlap: true,
-      isReminder: _reminder
+      isReminder: _reminder,
+      notes: _notesController.text
     );
     
     provider.addTask(task);
 
     Navigator.pop(context);
+  }
+
+  void _saveTemplate(BuildContext context) {
+    final provider = context.read<TemplateProvider>();
+
+    final template = Template(
+      id: const Uuid().v4(), 
+      name: _titleController.text, 
+      duration: _selectedDuration,
+      categoryId: selectedCategoryId,
+      notes: _notesController.text
+    );
+
+    provider.addTemplate(template);
+  }
+
+  void _updateTask(Template template) {
+    _titleController.text = template.name;
+    _selectedDuration = template.duration;
+    selectedCategoryId = template.categoryId;
+    taskTemplateId = template.id;
+    if (template.notes != null) {
+      _notesController.text = template.notes!;
+    }
   }
 }

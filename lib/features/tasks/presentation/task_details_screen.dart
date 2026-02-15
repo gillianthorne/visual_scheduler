@@ -116,16 +116,7 @@ class TaskDetailsScreen extends StatelessWidget {
                     child: const Text("Edit"),
                   ),
                 ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: () {
-                      // TODO: implement save as template
-                    },
-                    child: const Text("Save as Template"),
-                  ),
-                ),
-              ],
+              ]
             ),
           ],
         ),
