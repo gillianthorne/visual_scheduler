@@ -9,6 +9,8 @@ import 'package:visual_scheduler/features/settings/data/settings_model.dart';
 import 'package:visual_scheduler/features/tasks/data/task_model.dart';
 import 'package:visual_scheduler/features/tasks/data/task_repository.dart';
 import 'package:visual_scheduler/features/templates/data/template_model.dart';
+import 'package:visual_scheduler/features/templates/data/templates_repository.dart';
+import 'package:visual_scheduler/features/templates/logic/template_provider.dart';
 import 'features/tasks/logic/task_provider.dart';
 import 'features/tasks/presentation/daily_timeline_screen.dart';
 import 'features/tasks/data/duration_adapter.dart';
@@ -30,7 +32,8 @@ void main() async {
 
   final taskBox = await Hive.openBox<Task>('tasksBox');
   final taskRepository = TaskRepository(Hive.box<Task>('tasksBox'));
-
+  final templateBox = await Hive.openBox<Template>("templateBox");
+  final templateRepository = TemplatesRepository(Hive.box<Template>("templateBox"));
   await Hive.openBox<Category>('categories');
 
   runApp(
@@ -42,6 +45,9 @@ void main() async {
         ChangeNotifierProvider(
           create: (_) => CategoryProvider(),
         ),
+        ChangeNotifierProvider(
+          create: (_) => TemplateProvider(templateRepository),
+        )
       ],
       child: VisualSchedulerApp(taskBox: taskBox),
     ),
