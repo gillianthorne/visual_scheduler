@@ -92,53 +92,6 @@ class _DailyTimelineScreenState extends State<DailyTimelineScreen> {
 
   }
 
-  Widget _buildTimelineLabels() {
-    return Container (
-      child: Column(
-        children: List.generate(24, (i) {
-          return SizedBox(
-            height: 60,
-            child: Text(
-              "${i.toString().padLeft(2, '0')}:00",
-              style: const TextStyle(fontSize: 12, color: Colors.grey),
-            ),
-          );
-        }),
-      )
-    );
-    
-  }
-
-  Widget _buildDateSelector() {
-  return Row(
-    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-    children: [
-      IconButton(
-        icon: const Icon(Icons.chevron_left),
-        onPressed: () {
-          setState(() {
-            _selectedDate = _selectedDate.subtract(const Duration(days: 1));
-          });
-        },
-      ),
-
-      Text(
-        "${_selectedDate.year}-${_selectedDate.month.toString().padLeft(2, '0')}-${_selectedDate.day.toString().padLeft(2, '0')}",
-        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-      ),
-
-      IconButton(
-        icon: const Icon(Icons.chevron_right),
-        onPressed: () {
-          setState(() {
-            _selectedDate = _selectedDate.add(const Duration(days: 1));
-          });
-        },
-      ),
-    ],
-  );
-}
-  
   Widget _buildDateHeader() {
     final date = _selectedDate;
     final dayName = DateFormat("EEEE").format(date);

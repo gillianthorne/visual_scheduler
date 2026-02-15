@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../categories/data/category_model.dart';
 import '../../categories/logic/category_provider.dart';
 import 'create_or_edit_category_screen.dart';
 
