@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart' hide Category;
 import 'package:hive/hive.dart';
+import 'package:visual_scheduler/features/tasks/data/task_model.dart';
 
 import '../data/category_model.dart';
 
@@ -46,5 +47,15 @@ class CategoryProvider extends ChangeNotifier {
   int get nextSortOrder {
     if (_box.isEmpty) return 0;
     return _box.values.map((c) => c.sortOrder).reduce((a, b) => a > b ? a : b) + 1;
+  }
+
+  List<Task> getTasksWithId(List<Task> tasks, String categoryId) {
+    List<Task> foundTasks = [];
+    for (Task task in tasks) {
+      if (task.categoryId == categoryId) {
+        foundTasks.add(task);
+      }
+    }
+    return foundTasks;
   }
 }
