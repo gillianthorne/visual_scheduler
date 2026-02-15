@@ -45,7 +45,7 @@ class _DailyTimelineScreenState extends State<DailyTimelineScreen> {
     
     return Scaffold(
     body: Column(
-  children: [
+    children: [
     _buildDateHeader(),
 
     Expanded(
@@ -154,6 +154,7 @@ class _DailyTimelineScreenState extends State<DailyTimelineScreen> {
         int hour = (i ~/ 2) + startTime;
         final amPm = (hour >= 12) ? "PM" : "AM";
         hour = (amPm == "PM" ? hour = hour - 12 : hour);
+        hour = (hour == 0 ? 12 : hour);
         final minute = (i % 2) * 30;
 
         return Container(
