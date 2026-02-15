@@ -23,13 +23,18 @@ class _DailyTimelineScreenState extends State<DailyTimelineScreen> {
 
   @override
   void initState() {
-    print("INIT STATE RAN");
     super.initState();
     timer = Timer.periodic(Duration(minutes: 1), (_) {
       setState(() {});
-      print("This is running");
     });
   }
+
+  @override
+  void dispose() {
+    timer.cancel();
+    super.dispose();
+  }
+
 
   @override
   Widget build(BuildContext context) {
