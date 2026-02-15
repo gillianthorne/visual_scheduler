@@ -69,8 +69,8 @@ This project serves two purposes:
 - [x] Task creation + editing  
 - [ ] Overlap rendering  
 - [ ] Templates  
-- [ ] Day profiles  
-- [ ] Weekly/monthly views  
+- [ ] Day profiles 
+- [ ] User settings
 - [ ] Polished UI + animations  
 
 ---
