@@ -17,29 +17,13 @@ class TimelineTaskBlock extends StatelessWidget {
 
     return Container(
       height: height,
-      margin: const EdgeInsets.symmetric(
-        // vertical: 8,
-        horizontal: 16
-      ),
+      margin: const EdgeInsets.all(8),
       padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 0),
       decoration: BoxDecoration(
         color: Color(colour),
         borderRadius: BorderRadius.circular(8)
       ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text(
-            task.title, 
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold
-            )),
-          const SizedBox(width: 14),
-          Text(_formatTimeRange(task),
-          style: const TextStyle(fontSize: 14))
-        ],
-      ),
+      child: _returnText(task)
     );
   }
 
@@ -57,5 +41,52 @@ class TimelineTaskBlock extends StatelessWidget {
     final h = hours.toString();
     final m = minutes.toString().padLeft(2, "0");
     return "$h:$m $amPm";
+  }
+
+  Container _returnText(Task task) {
+    if (task.duration.inMinutes >= 30) {
+      return Container(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Flexible(
+              child: Text (
+              textAlign: TextAlign.center,
+              task.title, 
+              style: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold
+            ))
+            )
+            ,
+            const SizedBox(height: 6),
+            Flexible(child: 
+              Text(
+              _formatTimeRange(task),
+              style: const TextStyle(fontSize: 14),
+            ),)
+          ],
+        ),
+      );
+    } else {
+      return Container(
+        child: Flexible (
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                task.title, 
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                )),
+              const SizedBox(width: 14),
+              Text(_formatTimeRange(task),
+              style: const TextStyle(fontSize: 14))
+            ],
+          )
+      ),
+      );
+    }
   }
 }
