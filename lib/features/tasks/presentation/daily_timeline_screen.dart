@@ -41,6 +41,7 @@ class _DailyTimelineScreenState extends State<DailyTimelineScreen> {
     final taskProvider = context.watch<TaskProvider>();
     final tasks = taskProvider.tasksForDate(_selectedDate); // You'll filter these by date
     tasks.sort((a, b) => a.startOffset.compareTo(b.startOffset));
+    
     return Scaffold(
     body: Column(
   children: [
@@ -56,8 +57,8 @@ class _DailyTimelineScreenState extends State<DailyTimelineScreen> {
             children: [
               // LEFT TIME COLUMN
               Container(
-                width: 75,
-                color: Colors.deepPurple.shade50,
+                // width: 100,
+                // color: Colors.deepPurple.shade50,
                 child: _buildTimelineGrid(),
               ),
 
@@ -99,7 +100,7 @@ class _DailyTimelineScreenState extends State<DailyTimelineScreen> {
     final year = DateFormat('y').format(date);
 
     return Container (
-      color: Colors.deepPurple.shade50,
+      color: Colors.deepPurple.shade100,
       child: Padding(
       padding: const EdgeInsetsGeometry.fromLTRB(16, 32, 16, 12),
       child: Row(
@@ -149,20 +150,23 @@ class _DailyTimelineScreenState extends State<DailyTimelineScreen> {
   Widget _buildTimelineGrid() {
     return Column(
       children: List.generate(48 - (startTime*2), (i) {
-        final hour = (i ~/ 2) + startTime;
+        int hour = (i ~/ 2) + startTime;
+        final amPm = (hour >= 12) ? "PM" : "AM";
+        hour = (amPm == "PM" ? hour = hour - 12 : hour);
         final minute = (i % 2) * 30;
 
         return Container(
+            width: 100,
             height: 30 * pixelHeight,
-            padding: const EdgeInsets.only(left: 16),
-            alignment: Alignment.centerLeft,
+            alignment: Alignment.center,
             decoration: BoxDecoration(
               border: Border(
-                top: BorderSide(color: Colors.deepPurple.shade100)
-              )
+                top: BorderSide(color: Colors.deepPurple.shade100, width: 2)
+              ),
+              color: (minute == 0 ? Colors.deepPurple.shade50 : Colors.deepPurple.shade100),
             ),
             child: Text(
-              "${hour.toString().padLeft(2, "0")}:${minute.toString().padLeft(2, "0")}",
+              "${hour.toString()}:${minute.toString().padLeft(2, "0")} $amPm",
               style: const TextStyle(fontSize: 12, color: Colors.grey),
             ),
         );
@@ -171,14 +175,25 @@ class _DailyTimelineScreenState extends State<DailyTimelineScreen> {
   }
 
   Widget _buildTaskBlocks(List<Task> tasks) {
+  final layout = _computeTaskLayout(tasks);
+
+  return LayoutBuilder(
+    builder: (context, constraints) {
+      final timelineWidth = constraints.maxWidth;
+
       return Stack(
         children: tasks.map((task) {
+          final info = layout[task]!;
           final startMinutes = task.startOffset.inMinutes;
           final durationMinutes = task.duration.inMinutes;
+
+          final columnWidth = timelineWidth / info.columnCount;
+          final left = info.columnIndex * columnWidth;
+
           return Positioned(
             top: startMinutes * pixelHeight - (startTime * 60 * pixelHeight),
-            left: 8,
-            right: 8, 
+            left: left,
+            width: columnWidth,
             height: durationMinutes * pixelHeight,
             child: GestureDetector(
               onTap: () {
@@ -194,15 +209,18 @@ class _DailyTimelineScreenState extends State<DailyTimelineScreen> {
           );
         }).toList(),
       );
-    }
+    },
+  );
+}
+
 
   Widget _buildGridLines() {
-  final totalMinutes = (24 - 6) * 60;
+  final totalMinutes = (24 - 6) * 60 * 2;
 
   return Stack(
-    children: List.generate(totalMinutes ~/ 60, (index) {
-      final minutesSinceStart = index * 60;
-      double top = minutesSinceStart * 4;
+    children: List.generate(totalMinutes ~/ 30, (index) {
+      final minutesSinceStart = index * 30;
+      double top = minutesSinceStart * 2 + 1;
 
       return Positioned(
         top: top,
@@ -210,7 +228,14 @@ class _DailyTimelineScreenState extends State<DailyTimelineScreen> {
         right: 0,
         child: Container(
           height: 1,
-          color: Colors.deepPurple.shade100
+          decoration: BoxDecoration(
+            border: Border(
+              bottom: BorderSide(
+                color: Colors.deepPurple.shade100,
+                width: (minutesSinceStart % 60 == 30 ? 1 : 2)
+              )
+            )
+          ),
         ),
       );
     })
@@ -248,4 +273,102 @@ class _DailyTimelineScreenState extends State<DailyTimelineScreen> {
       );
     }    
   }
+
+  
+Map<Task, TaskLayoutInfo> _computeTaskLayout(List<Task> tasks) {
+  // Convert tasks to intervals
+  final intervals = tasks.map((task) {
+    final start = task.startOffset.inMinutes;
+    final end = start + task.duration.inMinutes;
+    return _TaskInterval(task: task, start: start, end: end);
+  }).toList();
+
+  // Sort by start time
+  intervals.sort((a, b) => a.start.compareTo(b.start));
+
+  final layout = <Task, TaskLayoutInfo>{};
+  List<_TaskInterval> currentGroup = [];
+
+  bool overlaps(a, b) =>
+      a.start < b.end && a.end > b.start;
+
+  void processGroup(List<_TaskInterval> group) {
+    if (group.isEmpty) return;
+
+    // Column assignment
+    final columns = <List<_TaskInterval>>[];
+
+    for (final item in group) {
+      bool placed = false;
+
+      for (final column in columns) {
+        final last = column.last;
+        if (!overlaps(item, last)) {
+          column.add(item);
+          placed = true;
+          break;
+        }
+      }
+
+      if (!placed) {
+        columns.add([item]);
+      }
+    }
+
+    final columnCount = columns.length;
+
+    for (int col = 0; col < columns.length; col++) {
+      for (final item in columns[col]) {
+        layout[item.task] = TaskLayoutInfo(
+          columnIndex: col,
+          columnCount: columnCount,
+        );
+      }
+    }
+  }
+
+  // Build overlap groups
+  for (final item in intervals) {
+    if (currentGroup.isEmpty) {
+      currentGroup.add(item);
+      continue;
+    }
+
+    final overlapsAny = currentGroup.any((g) => overlaps(g, item));
+
+    if (overlapsAny) {
+      currentGroup.add(item);
+    } else {
+      processGroup(currentGroup);
+      currentGroup = [item];
+    }
+  }
+
+  // Process last group
+  processGroup(currentGroup);
+
+  return layout;
+}
+}
+
+class TaskLayoutInfo {
+  final int columnIndex;
+  final int columnCount;
+
+  TaskLayoutInfo({
+    required this.columnIndex,
+    required this.columnCount,
+  });
+}
+
+class _TaskInterval {
+  final Task task;
+  final int start;
+  final int end;
+
+  _TaskInterval({
+    required this.task,
+    required this.start,
+    required this.end,
+  });
 }
