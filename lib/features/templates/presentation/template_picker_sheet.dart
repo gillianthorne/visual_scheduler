@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:visual_scheduler/features/tasks/logic/task_provider.dart';
 import 'package:visual_scheduler/features/templates/logic/template_provider.dart';
 
 class TemplatePickerSheet extends StatefulWidget {
