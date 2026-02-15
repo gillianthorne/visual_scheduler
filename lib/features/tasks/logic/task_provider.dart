@@ -53,4 +53,25 @@ class TaskProvider extends ChangeNotifier {
       return null;
     }
   }
+
+  void clearCategory(String id) {
+    for (Task task in tasks) {
+      if (task.categoryId == id) {
+        Task newTask = task.copyWith(
+          id: task.id,
+          title: task.title,
+          startOffset: task.startOffset,
+          duration: task.duration,
+          categoryId: null,
+          templateId: task.templateId,
+          allowOverlap: task.allowOverlap,
+          isReminder: task.isReminder,
+          notes: task.notes,
+          date: task.date          
+        );
+        deleteTask(task.id);
+        addTask(newTask);
+      }
+    }
+  }
 }
