@@ -50,10 +50,12 @@ class TimelineTaskBlock extends StatelessWidget {
   }
 
   String _formatTime(Duration offset) {
-    final hours = offset.inHours;
+    int hours = offset.inHours;
+    String amPm = (hours >= 12 ? "PM" : "AM");
+    hours = (hours > 12 ? hours - 12 : hours);
     final minutes = offset.inMinutes % 60;
-    final h = hours.toString().padLeft(2, "0");
+    final h = hours.toString();
     final m = minutes.toString().padLeft(2, "0");
-    return "$h:$m";
+    return "$h:$m $amPm";
   }
 }
