@@ -23,6 +23,7 @@ class _CreateTaskScreenState extends State<CreateTaskScreen> {
   DateTime _selectedDate = DateTime.now();
   TimeOfDay _selectedStart = const TimeOfDay(hour: 9, minute: 0);
   Duration _selectedDuration = const Duration(hours: 1);
+  bool _reminder = true;
 
   @override
   void initState() {
@@ -141,6 +142,19 @@ class _CreateTaskScreenState extends State<CreateTaskScreen> {
 
             const SizedBox(height: 16),
 
+            SwitchListTile(
+              title: Text("Do you want a reminder for this task?"),
+              value: _reminder, 
+              onChanged: (bool newValue) {
+                setState(() {
+                  _reminder = newValue;
+                  print("Reminder set to $_reminder");
+                });
+              } 
+            ),
+
+            const SizedBox(height: 16,),
+
             // NOTES (optional!)
             TextField(
               controller: _notesController,
@@ -184,7 +198,7 @@ class _CreateTaskScreenState extends State<CreateTaskScreen> {
       categoryId: selectedCategoryId,
       templateId: null,
       allowOverlap: true,
-      isReminder: false
+      isReminder: _reminder
     );
     
     provider.addTask(task);
