@@ -22,13 +22,17 @@ class Template extends HiveObject {
   @HiveField(5)
   final String? notes;
 
+  @HiveField(6)
+  final Duration? startOffset;
+
   Template({
     required this.id,
     required this.name,
     required this.duration,
     this.categoryId,
     this.allowOverlap = true,
-    this.notes
+    this.notes,
+    this.startOffset
   });
 
   Template copyWith({
@@ -37,14 +41,16 @@ class Template extends HiveObject {
     Duration? duration,
     String? categoryId,
     bool? allowOverlap,
-    String? notes
+    String? notes,
+    Duration? startOffset
   }) {
     return Template(id: id ?? this.id, 
     name: name ?? this.name, 
     duration: duration ?? this.duration, 
     categoryId: categoryId ?? this.categoryId,
     allowOverlap: allowOverlap ?? this.allowOverlap,
-    notes: notes ?? this.notes);
+    notes: notes ?? this.notes,
+    startOffset: startOffset ?? this.startOffset);
   }
 
   @override
