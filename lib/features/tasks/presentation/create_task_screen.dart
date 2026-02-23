@@ -113,7 +113,7 @@ class _CreateTaskScreenState extends State<CreateTaskScreen> {
 
             const SizedBox(height: 16),
 
-            // DURATION PICKER (simple dropdown for MVP)
+            // DURATION PICKER
             DropdownButton<Duration>(
               value: _selectedDuration,
               items: _durationOptions.map((d) {
@@ -182,17 +182,6 @@ class _CreateTaskScreenState extends State<CreateTaskScreen> {
 
             Row(
               children: [
-                Expanded(
-                  child:
-                    ElevatedButton(
-                      onPressed: () {
-                        print("\n\nSaving task for $_selectedDate");
-                        _saveTask(context);
-                      },
-                      child: const Text("Save Task"),
-                    ),
-                ),
-                const SizedBox(width: 16,),
                 Expanded (
                   child: 
                     ElevatedButton(
@@ -205,7 +194,19 @@ class _CreateTaskScreenState extends State<CreateTaskScreen> {
                         );
                       }, 
                       child: const Text("Save as template"))
-                )    
+                ),
+                const SizedBox(width: 16,),
+                Expanded(
+                  child:
+                    ElevatedButton(
+                      onPressed: () {
+                        print("\n\nSaving task for $_selectedDate");
+                        _saveTask(context);
+                      },
+                      child: const Text("Save Task"),
+                    ),
+                ),
+                    
               ]        
             ),
                 
@@ -272,7 +273,8 @@ class _CreateTaskScreenState extends State<CreateTaskScreen> {
       name: _titleController.text, 
       duration: _selectedDuration,
       categoryId: selectedCategoryId,
-      notes: _notesController.text
+      notes: _notesController.text,
+      startOffset: Duration(hours: _selectedStart.hour, minutes: _selectedStart.minute)
     );
 
     provider.addTemplate(template);
@@ -285,6 +287,11 @@ class _CreateTaskScreenState extends State<CreateTaskScreen> {
     taskTemplateId = template.id;
     if (template.notes != null) {
       _notesController.text = template.notes!;
+    }
+    if (template.startOffset != null) {
+      int hours = template.startOffset!.inHours;
+      int minutes = template.startOffset!.inMinutes - (hours * 60);
+      _selectedStart = TimeOfDay(hour: hours, minute: minutes);
     }
   }
 }
