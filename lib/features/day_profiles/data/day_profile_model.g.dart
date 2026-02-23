@@ -19,23 +19,20 @@ class DayProfileAdapter extends TypeAdapter<DayProfile> {
     return DayProfile(
       id: fields[0] as String,
       name: fields[1] as String,
-      tasks: (fields[2] as List).cast<ProfileTask>(),
-      repeatOnWeekdays: (fields[3] as List).cast<int>(),
+      tasks: (fields[2] as List).cast<Template>(),
     );
   }
 
   @override
   void write(BinaryWriter writer, DayProfile obj) {
     writer
-      ..writeByte(4)
+      ..writeByte(3)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
       ..write(obj.name)
       ..writeByte(2)
-      ..write(obj.tasks)
-      ..writeByte(3)
-      ..write(obj.repeatOnWeekdays);
+      ..write(obj.tasks);
   }
 
   @override

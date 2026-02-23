@@ -1,5 +1,5 @@
 import 'package:hive/hive.dart';
-import 'profile_task_model.dart';
+import 'package:visual_scheduler/features/templates/data/template_model.dart';
 
 part "day_profile_model.g.dart";
 
@@ -12,28 +12,23 @@ class DayProfile extends HiveObject {
   final String name;
 
   @HiveField(2)
-  List<ProfileTask> tasks;
-
-  @HiveField(3)
-  List<int> repeatOnWeekdays;
+  List<Template> tasks;
 
   DayProfile({
     required this.id,
     required this.name,
     this.tasks = const [],
-    this.repeatOnWeekdays = const[]
   });
 
   DayProfile copyWith({
     String? id,
     String? name,
-    List<ProfileTask>? tasks,
-    List<int>? repeatOnWeekdays
+    List<Template>? tasks
   }) {
     return DayProfile(id: id ?? this.id, 
     name: name ?? this.name,
-    tasks: tasks ?? this.tasks,
-    repeatOnWeekdays: repeatOnWeekdays ?? this.repeatOnWeekdays);
+    tasks: tasks ?? this.tasks
+    );
   }
 
   @override
