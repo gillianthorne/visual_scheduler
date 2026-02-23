@@ -4,7 +4,6 @@ import 'package:provider/provider.dart';
 import 'package:visual_scheduler/features/categories/data/category_model.dart';
 import 'package:visual_scheduler/features/categories/logic/category_provider.dart';
 import 'package:visual_scheduler/features/day_profiles/data/day_profile_model.dart';
-import 'package:visual_scheduler/features/day_profiles/data/profile_task_model.dart';
 import 'package:visual_scheduler/features/settings/data/settings_model.dart';
 import 'package:visual_scheduler/features/tasks/data/task_model.dart';
 import 'package:visual_scheduler/features/tasks/data/task_repository.dart';
@@ -23,7 +22,6 @@ void main() async {
   // app cannot be run without these two tasks, as that would cause an error
   await Hive.initFlutter();
   Hive.registerAdapter(DurationAdapter());
-  Hive.registerAdapter(ProfileTaskAdapter());
   Hive.registerAdapter(DayProfileAdapter());
   Hive.registerAdapter(TaskAdapter());
   Hive.registerAdapter(CategoryAdapter());
@@ -32,7 +30,7 @@ void main() async {
 
   final taskBox = await Hive.openBox<Task>('tasksBox');
   final taskRepository = TaskRepository(Hive.box<Task>('tasksBox'));
-  final templateBox = await Hive.openBox<Template>("templateBox");
+  await Hive.openBox<Template>("templateBox");
   final templateRepository = TemplatesRepository(Hive.box<Template>("templateBox"));
   await Hive.openBox<Category>('categories');
 
