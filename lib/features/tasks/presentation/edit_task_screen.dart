@@ -169,6 +169,7 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
             Row(
               children: [
                 // SAVE BUTTON
+                Expanded(child: 
                 ElevatedButton(
                   onPressed: () {
                     final updatedStartOffset = Duration(
@@ -190,11 +191,12 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
                     Navigator.pop(context);
                   },
                   child: const Text("Save Changes"),
-                ),
+                )),
                 
                 const SizedBox(width: 16),
 
                 // DELETE TASK BUTTON
+                Expanded (child: 
                 ElevatedButton(
                   onPressed: () async {
                     final confirmed = await showDialog<bool> (
@@ -219,6 +221,7 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
                       }
                   },
                 child: Text("Delete task"))
+                ,)
               ],
             )
           ]
