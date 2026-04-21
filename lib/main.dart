@@ -4,6 +4,8 @@ import 'package:provider/provider.dart';
 import 'package:visual_scheduler/features/categories/data/category_model.dart';
 import 'package:visual_scheduler/features/categories/logic/category_provider.dart';
 import 'package:visual_scheduler/features/day_profiles/data/day_profile_model.dart';
+import 'package:visual_scheduler/features/day_profiles/data/day_profile_repository.dart';
+import 'package:visual_scheduler/features/day_profiles/logic/day_profile_provider.dart';
 import 'package:visual_scheduler/features/settings/data/settings_model.dart';
 import 'package:visual_scheduler/features/tasks/data/task_model.dart';
 import 'package:visual_scheduler/features/tasks/data/task_repository.dart';
@@ -33,6 +35,8 @@ void main() async {
   await Hive.openBox<Template>("templateBox");
   final templateRepository = TemplatesRepository(Hive.box<Template>("templateBox"));
   await Hive.openBox<Category>('categories');
+  await Hive.openBox<DayProfile>("dayProfileBox");
+  final dayProfileRepository = DayProfileRepository(Hive.box<DayProfile>("dayProfileBox"));
 
   runApp(
     MultiProvider(
@@ -45,7 +49,9 @@ void main() async {
         ),
         ChangeNotifierProvider(
           create: (_) => TemplateProvider(templateRepository),
-        )
+        ),
+        ChangeNotifierProvider(
+          create: (_) => DayProfileProvider(dayProfileRepository))
       ],
       child: VisualSchedulerApp(taskBox: taskBox),
     ),

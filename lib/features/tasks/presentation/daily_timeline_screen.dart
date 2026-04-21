@@ -1,9 +1,12 @@
 import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_expandable_fab/flutter_expandable_fab.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import 'package:visual_scheduler/features/day_profiles/presentation/create_day_profile_screen.dart';
 import 'package:visual_scheduler/features/tasks/presentation/create_task_screen.dart';
 import 'package:visual_scheduler/features/tasks/presentation/widgets/timeline_task_block.dart';
+import 'package:visual_scheduler/features/templates/data/template_model.dart';
 import '../../tasks/logic/task_provider.dart';
 import '../data/task_model.dart';
 import 'task_details_screen.dart';
@@ -81,16 +84,30 @@ class _DailyTimelineScreenState extends State<DailyTimelineScreen> {
   ],
 ),
 
-    floatingActionButton: FloatingActionButton(
-      onPressed: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => CreateTaskScreen()),
-        );
-      },
-      child: const Icon(Icons.add),
-    ),
-  );
+    floatingActionButtonLocation: ExpandableFab.location,
+    floatingActionButton: ExpandableFab(
+      type: ExpandableFabType.up,
+      children: [
+        FloatingActionButton.large(
+          child: const Icon(Icons.add),
+          onPressed: () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => CreateTaskScreen())
+          )
+        ),
+        FloatingActionButton.large(
+          child: const Text("Create day template", textAlign: TextAlign.center,),
+          onPressed: () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => CreateDayProfileScreen(templateList: List<Template>.empty(growable: true), profileName: "",))
+          )
+        ),
+        FloatingActionButton.large(
+          child: const Text("Load from day template"),
+          onPressed: () => _loadDayProfile()
+        )
+      ],
+    ));
 
   }
 
@@ -113,14 +130,14 @@ class _DailyTimelineScreenState extends State<DailyTimelineScreen> {
                 _selectedDate = _selectedDate.subtract(const Duration(days: 1));
               });
             }, 
-            icon: Icon(Icons.chevron_left, size: 32)),
+            icon: Icon(Icons.chevron_left, size: 48)),
           InkWell(
             onTap: () async {
               final picked = await showDatePicker(
                 context: context,
                 initialDate: _selectedDate,
-                firstDate: DateTime(2000),
-                lastDate: DateTime(2100),
+                firstDate: DateTime(DateTime.now().year),
+                lastDate: DateTime(DateTime.now().year + 1),
               );
 
               if (picked != null) {
@@ -142,7 +159,7 @@ class _DailyTimelineScreenState extends State<DailyTimelineScreen> {
                 _selectedDate = _selectedDate.add(const Duration(days: 1));
               });
             }, 
-            icon: const Icon(Icons.chevron_right, size: 32,)),
+            icon: const Icon(Icons.chevron_right, size: 48,)),
         ],
     ))    
     );
@@ -303,6 +320,9 @@ class _DailyTimelineScreenState extends State<DailyTimelineScreen> {
     }    
   }
 
+  void _loadDayProfile() {
+    print("TO DO");
+  }
   
 Map<Task, TaskLayoutInfo> _computeTaskLayout(List<Task> tasks) {
   // Convert tasks to intervals
