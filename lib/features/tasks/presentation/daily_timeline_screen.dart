@@ -3,7 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_expandable_fab/flutter_expandable_fab.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import 'package:visual_scheduler/features/day_profiles/data/day_profile_model.dart';
+import 'package:visual_scheduler/features/day_profiles/logic/day_profile_provider.dart';
 import 'package:visual_scheduler/features/day_profiles/presentation/create_day_profile_screen.dart';
+import 'package:visual_scheduler/features/day_profiles/presentation/day_profile_picker_sheet.dart';
 import 'package:visual_scheduler/features/tasks/presentation/create_task_screen.dart';
 import 'package:visual_scheduler/features/tasks/presentation/widgets/timeline_task_block.dart';
 import 'package:visual_scheduler/features/templates/data/template_model.dart';
@@ -20,10 +23,13 @@ class DailyTimelineScreen extends StatefulWidget {
 }
 
 class _DailyTimelineScreenState extends State<DailyTimelineScreen> {
-  DateTime _selectedDate = DateTime.now(); 
+  DateTime _selectedDate = DateTime.now();
   int startTime = 6;
   double pixelHeight = 4;
   late Timer timer;
+
+  String? selectedDayProfileId;
+  late DayProfile selectedDayProfile;
 
   @override
   void initState() {
@@ -39,75 +45,105 @@ class _DailyTimelineScreenState extends State<DailyTimelineScreen> {
     super.dispose();
   }
 
-
   @override
   Widget build(BuildContext context) {
     final taskProvider = context.watch<TaskProvider>();
-    final tasks = taskProvider.tasksForDate(_selectedDate); // You'll filter these by date
+    final tasks = taskProvider.tasksForDate(
+      _selectedDate,
+    ); // You'll filter these by date
     tasks.sort((a, b) => a.startOffset.compareTo(b.startOffset));
-    
+
     return Scaffold(
-    body: Column(
-    children: [
-    _buildDateHeader(),
+      body: Column(
+        children: [
+          _buildDateHeader(),
 
-    Expanded(
-      child: SingleChildScrollView(
-        child: SizedBox(
-          // height is working in half hours, so 48 - start time as half hours, multiplied
-          // by each half hour in pixel height, plus a bit of padding at the bottom of the screen
-          height: (48 - startTime * 2) * 30 * pixelHeight + 16,
-          child: Row(
-            children: [
-              // LEFT TIME COLUMN
-              Container(
-                // width: 100,
-                // color: Colors.deepPurple.shade50,
-                child: _buildTimelineGrid(),
-              ),
-
-              // TASK AREA
-              Expanded(
-                child: Stack(
+          Expanded(
+            child: SingleChildScrollView(
+              child: SizedBox(
+                // height is working in half hours, so 48 - start time as half hours, multiplied
+                // by each half hour in pixel height, plus a bit of padding at the bottom of the screen
+                height: (48 - startTime * 2) * 30 * pixelHeight + 16,
+                child: Row(
                   children: [
-                    _buildGridLines(),
-                    _buildTaskBlocks(tasks), // positioned tasks
-                    _buildTimeLine()
+                    // LEFT TIME COLUMN
+                    Container(
+                      // width: 100,
+                      // color: Colors.deepPurple.shade50,
+                      child: _buildTimelineGrid(),
+                    ),
+
+                    // TASK AREA
+                    Expanded(
+                      child: Stack(
+                        children: [
+                          _buildGridLines(),
+                          _buildTaskBlocks(tasks), // positioned tasks
+                          _buildTimeLine(),
+                        ],
+                      ),
+                    ),
                   ],
                 ),
               ),
-            ],
+            ),
           ),
-        ),
+        ],
       ),
-    ),
-  ],
-),
 
-    floatingActionButtonLocation: ExpandableFab.location,
-    floatingActionButton: ExpandableFab(
-      type: ExpandableFabType.up,
-      children: [
-        FloatingActionButton.large(
-          child: const Icon(Icons.add),
-          onPressed: () => Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => CreateTaskScreen())
-          )
-        ),
-        FloatingActionButton.large(
-          child: const Text("Create day template", textAlign: TextAlign.center,),
-          onPressed: () => Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => CreateDayProfileScreen(templateList: List<Template>.empty(growable: true), profileName: "",))
-          )
-        ),
-        FloatingActionButton.large(
-          child: const Text("Load from day template"),
-          onPressed: () => _loadDayProfile()
-        )
-      ],
-    ));
+      floatingActionButtonLocation: ExpandableFab.location,
+      floatingActionButton: ExpandableFab(
+        type: ExpandableFabType.up,
+        children: [
+          FloatingActionButton.large(
+            child: const Icon(Icons.add),
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => CreateTaskScreen()),
+            ),
+          ),
+          FloatingActionButton.large(
+            child: const Text(
+              "Create day template",
+              textAlign: TextAlign.center,
+            ),
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => CreateDayProfileScreen(
+                  templateList: List<Template>.empty(growable: true),
+                  profileName: "",
+                ),
+              ),
+            ),
+          ),
+          FloatingActionButton.large(
+            child: const Text("Load from day template"),
+            onPressed: () async {
+              final result = await showModalBottomSheet<String>(
+                context: context, 
+                builder: (_) => DayProfilePickerSheet(
+                    selectedDayProfileId: selectedDayProfileId
+                  )
+              );
+                if (result != null) {
+                  setState(() {
+                    selectedDayProfileId = result;
+                    selectedDayProfile = context.read<DayProfileProvider>().getProfileById(selectedDayProfileId!)!;
+                    List<Task> todaysTasks = _templateToTask(selectedDayProfile.tasks);
+                    
+                    final taskProvider = context.read<TaskProvider>();
+                    for (final task in todaysTasks) {
+                      taskProvider.addTask(task);
+                    }
+
+                    setState(() {});
+
+                  });
+                }
+                })
+        ]
+      ));
 
   }
 
@@ -117,57 +153,65 @@ class _DailyTimelineScreenState extends State<DailyTimelineScreen> {
     final monthDay = DateFormat("MMMM d").format(date);
     final year = DateFormat('y').format(date);
 
-    return Container (
+    return Container(
       color: Colors.deepPurple.shade100,
       child: Padding(
-      padding: const EdgeInsetsGeometry.fromLTRB(16, 32, 16, 12),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          IconButton(
-            onPressed: () {
-              setState(() {
-                _selectedDate = _selectedDate.subtract(const Duration(days: 1));
-              });
-            }, 
-            icon: Icon(Icons.chevron_left, size: 48)),
-          InkWell(
-            onTap: () async {
-              final picked = await showDatePicker(
-                context: context,
-                initialDate: _selectedDate,
-                firstDate: DateTime(DateTime.now().year),
-                lastDate: DateTime(DateTime.now().year + 1),
-              );
-
-              if (picked != null) {
-                setState(() => _selectedDate = picked);
-              }
-            },
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Text(dayName, style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-                Text(monthDay, style: TextStyle(fontSize: 16)),
-                Text(year, style: TextStyle(fontSize: 16)),
-              ],
+        padding: const EdgeInsetsGeometry.fromLTRB(16, 32, 16, 12),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            IconButton(
+              onPressed: () {
+                setState(() {
+                  _selectedDate = _selectedDate.subtract(
+                    const Duration(days: 1),
+                  );
+                });
+              },
+              icon: Icon(Icons.chevron_left, size: 48),
             ),
-          ),
-          IconButton(
-            onPressed: () {
-              setState(() {
-                _selectedDate = _selectedDate.add(const Duration(days: 1));
-              });
-            }, 
-            icon: const Icon(Icons.chevron_right, size: 48,)),
-        ],
-    ))    
+            InkWell(
+              onTap: () async {
+                final picked = await showDatePicker(
+                  context: context,
+                  initialDate: _selectedDate,
+                  firstDate: DateTime(DateTime.now().year),
+                  lastDate: DateTime(DateTime.now().year + 1),
+                );
+
+                if (picked != null) {
+                  setState(() => _selectedDate = picked);
+                }
+              },
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Text(
+                    dayName,
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  ),
+                  Text(monthDay, style: TextStyle(fontSize: 16)),
+                  Text(year, style: TextStyle(fontSize: 16)),
+                ],
+              ),
+            ),
+            IconButton(
+              onPressed: () {
+                setState(() {
+                  _selectedDate = _selectedDate.add(const Duration(days: 1));
+                });
+              },
+              icon: const Icon(Icons.chevron_right, size: 48),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
   Widget _buildTimelineGrid() {
     return Column(
-      children: List.generate(48 - (startTime*2), (i) {
+      children: List.generate(48 - (startTime * 2), (i) {
         int hour = (i ~/ 2) + startTime;
         final amPm = (hour >= 12) ? "PM" : "AM";
         hour = (amPm == "PM" ? hour = hour - 12 : hour);
@@ -175,239 +219,246 @@ class _DailyTimelineScreenState extends State<DailyTimelineScreen> {
         final minute = (i % 2) * 30;
 
         return Container(
-            width: 100,
-            height: 30 * pixelHeight,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              border: Border(
-                top: BorderSide(color: Colors.deepPurple.shade100, width: 2)
-              ),
-              color: (minute == 0 ? Colors.deepPurple.shade50 : Colors.deepPurple.shade100),
+          width: 100,
+          height: 30 * pixelHeight,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            border: Border(
+              top: BorderSide(color: Colors.deepPurple.shade100, width: 2),
             ),
-            child: Text(
-              "${hour.toString()}:${minute.toString().padLeft(2, "0")} $amPm",
-              style: const TextStyle(fontSize: 12, color: Colors.grey),
-            ),
+            color: (minute == 0
+                ? Colors.deepPurple.shade50
+                : Colors.deepPurple.shade100),
+          ),
+          child: Text(
+            "${hour.toString()}:${minute.toString().padLeft(2, "0")} $amPm",
+            style: const TextStyle(fontSize: 12, color: Colors.grey),
+          ),
         );
       }),
     );
   }
 
   Widget _buildTaskBlocks(List<Task> tasks) {
-  final layout = _computeTaskLayout(tasks);
+    final layout = _computeTaskLayout(tasks);
 
-  return LayoutBuilder(
-    builder: (context, constraints) {
-      final timelineWidth = constraints.maxWidth;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final timelineWidth = constraints.maxWidth;
 
-      return Stack(
-        children: tasks.map((task) {
-          final info = layout[task]!;
-          final startMinutes = task.startOffset.inMinutes;
-          final durationMinutes = task.duration.inMinutes;
+        return Stack(
+          children: tasks.map((task) {
+            final info = layout[task]!;
+            final startMinutes = task.startOffset.inMinutes;
+            final durationMinutes = task.duration.inMinutes;
 
-          final columnWidth = timelineWidth / info.columnCount;
-          final left = info.columnIndex * columnWidth;
+            final columnWidth = timelineWidth / info.columnCount;
+            final left = info.columnIndex * columnWidth;
 
-          return Positioned(
-            top: startMinutes * pixelHeight - (startTime * 60 * pixelHeight),
-            left: left,
-            width: columnWidth,
-            height: durationMinutes * pixelHeight,
-            child: GestureDetector(
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => TaskDetailsScreen(task: task),
-                  ),
-                );
-              },
-              child: TimelineTaskBlock(task: task),
-            ),
-          );
-        }).toList(),
-      );
-    },
-  );
-}
+            return Positioned(
+              top: startMinutes * pixelHeight - (startTime * 60 * pixelHeight),
+              left: left,
+              width: columnWidth,
+              height: durationMinutes * pixelHeight,
+              child: GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => TaskDetailsScreen(task: task),
+                    ),
+                  );
+                },
+                child: TimelineTaskBlock(task: task),
+              ),
+            );
+          }).toList(),
+        );
+      },
+    );
+  }
 
   Widget _buildGridLines() {
-  final totalMinutes = (24 - 6) * 60 * 2;
+    final totalMinutes = (24 - 6) * 60 * 2;
 
-  return Stack(
-    children: List.generate(totalMinutes ~/ 15, (index) {
-      // print(index);
-      final minutesSinceStart = index * 15;
-      // print(minutesSinceStart);
-      double top = minutesSinceStart * 4 + 1;
-      BorderSide border = BorderSide();
-
-      if (minutesSinceStart % 60 == 0) {
-        border = BorderSide(color: Colors.deepPurple.shade100, width: 2);
-      }
-      else if (minutesSinceStart % 60 == 30) {
-        border = BorderSide(color: Colors.deepPurple.shade100, width: 1);
-      } 
-
-      if (minutesSinceStart % 30 != 15 ) {
-        return Positioned(
-          top: top,
-          left: 0,
-          right: 0,
-          child: Container(
-            height: 1,
-            decoration: BoxDecoration(
-              border: Border(
-                bottom: border
-              )
-            ),
-          ),
-        );
-      } else {
+    return Stack(
+      children: List.generate(totalMinutes ~/ 15, (index) {
+        // print(index);
+        final minutesSinceStart = index * 15;
         // print(minutesSinceStart);
-        return Positioned(
-          top: top,
-          left: 0,
-          right: 0,
-          child: DottedBorder(
-            options: RectDottedBorderOptions(
-              strokeWidth: 1,
-              padding: EdgeInsets.all(0),
-              dashPattern: [10, 5],
-              color: Colors.deepPurple.shade50,
-            ),
+        double top = minutesSinceStart * 4 + 1;
+        BorderSide border = BorderSide();
+
+        if (minutesSinceStart % 60 == 0) {
+          border = BorderSide(color: Colors.deepPurple.shade100, width: 2);
+        } else if (minutesSinceStart % 60 == 30) {
+          border = BorderSide(color: Colors.deepPurple.shade100, width: 1);
+        }
+
+        if (minutesSinceStart % 30 != 15) {
+          return Positioned(
+            top: top,
+            left: 0,
+            right: 0,
             child: Container(
-              height: 0,
-            )
-          )
-        );
-      }
-      
-    })
-  );
-}
+              height: 1,
+              decoration: BoxDecoration(border: Border(bottom: border)),
+            ),
+          );
+        } else {
+          // print(minutesSinceStart);
+          return Positioned(
+            top: top,
+            left: 0,
+            right: 0,
+            child: DottedBorder(
+              options: RectDottedBorderOptions(
+                strokeWidth: 1,
+                padding: EdgeInsets.all(0),
+                dashPattern: [10, 5],
+                color: Colors.deepPurple.shade50,
+              ),
+              child: Container(height: 0),
+            ),
+          );
+        }
+      }),
+    );
+  }
 
   Widget _buildTimeLine() {
-    Duration offset = Duration(hours: DateTime.now().hour, minutes: DateTime.now().minute);
-    
-    double lineOffset = offset.inMinutes.toDouble() * pixelHeight - (startTime * 60 * pixelHeight);
+    Duration offset = Duration(
+      hours: DateTime.now().hour,
+      minutes: DateTime.now().minute,
+    );
 
-    final today = "${DateTime.now().year}-${DateTime.now().month}-${DateTime.now().day}";
-    final comparedDay = "${_selectedDate.year}-${_selectedDate.month}-${_selectedDate.day}";
+    double lineOffset =
+        offset.inMinutes.toDouble() * pixelHeight -
+        (startTime * 60 * pixelHeight);
 
+    final today =
+        "${DateTime.now().year}-${DateTime.now().month}-${DateTime.now().day}";
+    final comparedDay =
+        "${_selectedDate.year}-${_selectedDate.month}-${_selectedDate.day}";
 
     if (today == comparedDay) {
       return Positioned(
         top: lineOffset,
         left: 0,
         right: 0,
-        child: Container(
-          height: 3,
-          color: Colors.red,
-        ),
-    );
+        child: Container(height: 3, color: Colors.red),
+      );
     } else {
-      return Positioned (
+      return Positioned(
         top: -5,
         left: 0,
         right: 0,
-        child: Container(
-          height: 3,
-          color: Colors.red,
-        )
+        child: Container(height: 3, color: Colors.red),
       );
-    }    
+    }
   }
 
-  void _loadDayProfile() {
-    print("TO DO");
+  List<Task> _templateToTask(List<Template> templates) {
+    List<Task> newTasks = [];
+    for (var template in templates) {
+      print(template.name);
+      newTasks.add(
+        Task(
+          id: template.id, 
+          title: template.name, 
+          startOffset: template.startOffset!, 
+          duration: template.duration, 
+          date: DateTime.now(),
+          categoryId: template.categoryId,
+          notes: template.notes,
+          allowOverlap: template.allowOverlap
+          )
+      );
+    }
+
+    return newTasks;
   }
-  
-Map<Task, TaskLayoutInfo> _computeTaskLayout(List<Task> tasks) {
-  // Convert tasks to intervals
-  final intervals = tasks.map((task) {
-    final start = task.startOffset.inMinutes;
-    final end = start + task.duration.inMinutes;
-    return _TaskInterval(task: task, start: start, end: end);
-  }).toList();
 
-  // Sort by start time
-  intervals.sort((a, b) => a.start.compareTo(b.start));
+  Map<Task, TaskLayoutInfo> _computeTaskLayout(List<Task> tasks) {
+    // Convert tasks to intervals
+    final intervals = tasks.map((task) {
+      final start = task.startOffset.inMinutes;
+      final end = start + task.duration.inMinutes;
+      return _TaskInterval(task: task, start: start, end: end);
+    }).toList();
 
-  final layout = <Task, TaskLayoutInfo>{};
-  List<_TaskInterval> currentGroup = [];
+    // Sort by start time
+    intervals.sort((a, b) => a.start.compareTo(b.start));
 
-  bool overlaps(a, b) =>
-      a.start < b.end && a.end > b.start;
+    final layout = <Task, TaskLayoutInfo>{};
+    List<_TaskInterval> currentGroup = [];
 
-  void processGroup(List<_TaskInterval> group) {
-    if (group.isEmpty) return;
+    bool overlaps(a, b) => a.start < b.end && a.end > b.start;
 
-    // Column assignment
-    final columns = <List<_TaskInterval>>[];
+    void processGroup(List<_TaskInterval> group) {
+      if (group.isEmpty) return;
 
-    for (final item in group) {
-      bool placed = false;
+      // Column assignment
+      final columns = <List<_TaskInterval>>[];
 
-      for (final column in columns) {
-        final last = column.last;
-        if (!overlaps(item, last)) {
-          column.add(item);
-          placed = true;
-          break;
+      for (final item in group) {
+        bool placed = false;
+
+        for (final column in columns) {
+          final last = column.last;
+          if (!overlaps(item, last)) {
+            column.add(item);
+            placed = true;
+            break;
+          }
+        }
+
+        if (!placed) {
+          columns.add([item]);
         }
       }
 
-      if (!placed) {
-        columns.add([item]);
+      final columnCount = columns.length;
+
+      for (int col = 0; col < columns.length; col++) {
+        for (final item in columns[col]) {
+          layout[item.task] = TaskLayoutInfo(
+            columnIndex: col,
+            columnCount: columnCount,
+          );
+        }
       }
     }
 
-    final columnCount = columns.length;
+    // Build overlap groups
+    for (final item in intervals) {
+      if (currentGroup.isEmpty) {
+        currentGroup.add(item);
+        continue;
+      }
 
-    for (int col = 0; col < columns.length; col++) {
-      for (final item in columns[col]) {
-        layout[item.task] = TaskLayoutInfo(
-          columnIndex: col,
-          columnCount: columnCount,
-        );
+      final overlapsAny = currentGroup.any((g) => overlaps(g, item));
+
+      if (overlapsAny) {
+        currentGroup.add(item);
+      } else {
+        processGroup(currentGroup);
+        currentGroup = [item];
       }
     }
+
+    // Process last group
+    processGroup(currentGroup);
+
+    return layout;
   }
-
-  // Build overlap groups
-  for (final item in intervals) {
-    if (currentGroup.isEmpty) {
-      currentGroup.add(item);
-      continue;
-    }
-
-    final overlapsAny = currentGroup.any((g) => overlaps(g, item));
-
-    if (overlapsAny) {
-      currentGroup.add(item);
-    } else {
-      processGroup(currentGroup);
-      currentGroup = [item];
-    }
-  }
-
-  // Process last group
-  processGroup(currentGroup);
-
-  return layout;
-}
 }
 
 class TaskLayoutInfo {
   final int columnIndex;
   final int columnCount;
 
-  TaskLayoutInfo({
-    required this.columnIndex,
-    required this.columnCount,
-  });
+  TaskLayoutInfo({required this.columnIndex, required this.columnCount});
 }
 
 class _TaskInterval {
@@ -415,9 +466,5 @@ class _TaskInterval {
   final int start;
   final int end;
 
-  _TaskInterval({
-    required this.task,
-    required this.start,
-    required this.end,
-  });
+  _TaskInterval({required this.task, required this.start, required this.end});
 }

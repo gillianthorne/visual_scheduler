@@ -29,6 +29,7 @@ class _CreateTemplateTaskScreenState extends State<CreateTemplateTaskScreen> {
     selectedCategoryId = null;
   }
 
+  // 16 15-minute increments (15 mins to 4 hrs)
   final List<Duration> _durationOptions = List.generate(
     16, 
     (i) => Duration(minutes: ( 15 * (i + 1)))
